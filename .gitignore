@@ -1,0 +1,11 @@
+config.toml
+
+# Temp build by fresh
+tmp/
+
+bin/
+.vscode/
+.DS_Store
+coverage.txt
+__debug_bin
+reverie*.log
