@@ -4,6 +4,9 @@ github.com/BurntSushi/toml
 # github.com/appleboy/gin-jwt/v2 v2.6.4
 ## explicit
 github.com/appleboy/gin-jwt/v2
+# github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
+## explicit
+github.com/asaskevich/govalidator
 # github.com/aws/aws-sdk-go v1.34.28
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
