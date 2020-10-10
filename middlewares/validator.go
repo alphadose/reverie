@@ -8,6 +8,32 @@ import (
 	"github.com/reverie/types"
 )
 
+// IsClient checks whether a user is a client or not
+func IsClient(c *gin.Context) {
+	user := ExtractClaims(c)
+	if user.IsClient() {
+		c.Next()
+		return
+	}
+	c.JSON(403, gin.H{
+		"success": false,
+		"error":   "User is not a client",
+	})
+}
+
+// IsVendor checks whether a user is a vendor or not
+func IsVendor(c *gin.Context) {
+	user := ExtractClaims(c)
+	if user.IsVendor() {
+		c.Next()
+		return
+	}
+	c.JSON(403, gin.H{
+		"success": false,
+		"error":   "User is not a vendor",
+	})
+}
+
 // ValidateUserRegistration validates the user registration request
 func ValidateUserRegistration(c *gin.Context) {
 	requestBody := getBodyFromContext(c)

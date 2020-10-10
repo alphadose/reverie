@@ -1,11 +1,35 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	c "github.com/reverie/controllers"
+	m "github.com/reverie/middlewares"
 )
 
 func newRouter() http.Handler {
 	router := gin.Default()
+
+	corsConfig := cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Cookie"},
+		AllowCredentials: false,
+		AllowAllOrigins:  true,
+		MaxAge:           12 * time.Hour,
+	}
+	router.Use(cors.New(corsConfig))
+	router.NoRoute(c.Handle404)
+
+	auth := router.Group("/auth")
+	{
+		auth.POST("/login", m.JWT.LoginHandler)
+		auth.POST("/register/client", m.ValidateUserRegistration, c.RegisterClient)
+		auth.POST("/register/vendor", m.ValidateUserRegistration, c.RegisterVendor)
+		auth.GET("/refresh", m.JWT.RefreshHandler)
+	}
+
 	return router
 }
