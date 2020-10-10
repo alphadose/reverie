@@ -2,8 +2,16 @@ package configs
 
 import "github.com/gin-gonic/gin"
 
-// Project holds the main configuration for the entire project
-var Project = getConfiguration()
+var (
+	// Project holds the main configuration for the entire project
+	Project = getConfiguration()
+
+	// MongoConfig is the configuration for MongoDB
+	MongoConfig = Project.Mongo
+
+	// AdminConfig is the configuration for default Gasper admin
+	AdminConfig = Project.Admin
+)
 
 func init() {
 	if Project.Debug {

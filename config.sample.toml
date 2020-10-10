@@ -1,2 +1,33 @@
+# Configuration sample for Reverie
+
+############################
+#   Global Configuration   #
+############################
+
+# Run Reverie in Debug mode ?
+# Set this value to `false` in Production.
 debug = true
+
+# The port to run the server on
 port = 3000
+
+
+###########################
+#   Admin Configuration   #
+###########################
+
+# Default admin credentials for the Reverie ecosystem
+[admin]
+email = "anish.mukherjee1996@gmail.com"
+username = "alphadose"
+password = "alphadose"
+
+
+#############################
+#   MongoDB Configuration   #
+#############################
+
+[mongo]
+# For databases with authentication
+# use the following URL format `mongodb://username:password@host:port/?authSource=admin`
+url = "mongodb://localhost:27017"

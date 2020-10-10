@@ -12,21 +12,21 @@ Open your favourite terminal and perform the following tasks:-
 
     ```bash
     $ go version
-    go version go1.13.5 darwin/amd64
+    go version go1.14.2 darwin/amd64
     ```
 
 2. Clone this repository.
 
     ```bash
-    $ git clone https://github.com/sdslabs/gasper
+    $ git clone git@github.com:alphadose/reverie.git
     ```
 
 3. Go inside the cloned directory and list available *makefile* commands.
 
     ```bash
-    $ cd gasper && make help
+    $ cd reverie && make help
 
-    Reverie: The dark side of EzFlo
+    Reverie: The dark side(backend) of EzFlo
 
     install   Install missing dependencies
     build     Build the project binary
