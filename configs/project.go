@@ -9,8 +9,11 @@ var (
 	// MongoConfig is the configuration for MongoDB
 	MongoConfig = Project.Mongo
 
-	// AdminConfig is the configuration for default Gasper admin
+	// AdminConfig is the configuration for default Reverie admin
 	AdminConfig = Project.Admin
+
+	// JWTConfig is the configuration for json web auth token
+	JWTConfig = Project.JWT
 )
 
 func init() {

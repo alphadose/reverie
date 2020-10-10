@@ -33,7 +33,7 @@ type User struct {
 	Email    string `form:"email" json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
 	Password string `form:"password" json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
 	Username string `form:"username" json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,alphanum~Field 'username' should only have alphanumeric characters,stringlength(5|40)~Field 'username' should have length between 5 to 40 characters"`
-	Role     string `form:"role" json:"role" bson:"role" valid:"in(client|vendor)~Field 'Role' should be either client or vendor"`
+	Role     string `form:"role" json:"role" bson:"role" valid:"required~Field 'role' is required but was not provided,in(client|vendor)~Field 'Role' should be either client or vendor"`
 	Success  bool   `json:"success,omitempty" bson:"-"`
 }
 

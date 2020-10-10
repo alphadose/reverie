@@ -7,7 +7,7 @@
 
 ## Coding Style Guide
 
-Gasper follows standard effective go guidelines. You can refer to [this guide](https://github.com/golang/go/wiki/CodeReviewComments)
+Reverie follows standard effective go guidelines. You can refer to [this guide](https://github.com/golang/go/wiki/CodeReviewComments)
 for more information.
 
 ## Pre-Commit

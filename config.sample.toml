@@ -31,3 +31,22 @@ password = "alphadose"
 # For databases with authentication
 # use the following URL format `mongodb://username:password@host:port/?authSource=admin`
 url = "mongodb://localhost:27017"
+
+
+#########################
+#   JWT Configuration   #
+#########################
+
+# Configuration for the JSON Web Token (JWT) authentication mechanism.
+[jwt]
+
+# timeout refers to the duration in which the JWT is valid.
+# max_refresh refers to the duration in which the JWT can be refreshed after its expiry.
+
+# Both timeout and max_refresh are in seconds
+# Total refresh time = max_refresh + timeout
+timeout = 3600 # 1 hour
+max_refresh = 2419200 # 28 days
+
+# Secret Key used for encrypting the JWT token.
+secret = "YOUR_SECRET_KEY"

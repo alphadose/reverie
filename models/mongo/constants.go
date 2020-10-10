@@ -8,41 +8,14 @@ const (
 	// projectDatabase is the name of the database used for storing all of reverie's information
 	projectDatabase = "reverie"
 
-	// DBInstance is db instance type name in the instances collection
-	DBInstance = "database"
-
-	// AppInstance is app instance type name in the instances collection
-	AppInstance = "application"
-
-	// InstanceCollection is the collection for all the instances
-	InstanceCollection = "instances"
-
 	// UserCollection is the collection for all users
 	UserCollection = "users"
 
-	// MetricsCollection is the collection to hold the metrics of the instances
-	MetricsCollection = "metrics"
+	// PostCollection is the collection for all job posts
+	PostCollection = "posts"
 
 	// NameKey is the key holding the name of an instance
 	NameKey = "name"
-
-	// OwnerKey is the key holding the owner of an instance
-	OwnerKey = "owner"
-
-	// InstanceTypeKey is the key holding the instance type of an instance
-	InstanceTypeKey = "instance_type"
-
-	// LanguageKey is the key holding the language of an instance
-	LanguageKey = "language"
-
-	// HostIPKey is the key holding the host IP address of an instance
-	HostIPKey = "host_ip"
-
-	// ContainerPortKey is the key holding the port of the container in which an application is deployed
-	ContainerPortKey = "container_port"
-
-	// PortKey is the key holding the port of the container in which a database server is deployed
-	PortKey = "port"
 
 	// EmailKey is the key holding the email of a user
 	EmailKey = "email"
@@ -53,11 +26,11 @@ const (
 	// PasswordKey is the key holding the password of a user/instance
 	PasswordKey = "password"
 
-	// AdminKey is the key denoting whether a user has superuser privileges or not
-	AdminKey = "admin"
+	// RoleKey is the key denoting the role of a user
+	RoleKey = "role"
 
-	// TimestampKey is the key holding the timestamp of when a metrics collection was inserted
-	TimestampKey = "timestamp"
+	// timeout is the context timeout for generic operations
+	timeout = 5
 )
 
 // ErrNoDocuments is the error when no matching documents are found
