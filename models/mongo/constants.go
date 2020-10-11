@@ -8,11 +8,11 @@ const (
 	// projectDatabase is the name of the database used for storing all of reverie's information
 	projectDatabase = "reverie"
 
-	// UserCollection is the collection for all users
-	UserCollection = "users"
+	// UserCollectionKey is the collection for all users
+	UserCollectionKey = "users"
 
-	// PostCollection is the collection for all job posts
-	PostCollection = "posts"
+	// PostCollectionKey is the collection for all job posts
+	PostCollectionKey = "posts"
 
 	// NameKey is the key holding the name of an instance
 	NameKey = "name"

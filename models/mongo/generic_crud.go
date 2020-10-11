@@ -12,8 +12,7 @@ import (
 // Create Operations
 
 // InsertOne inserts a document into a mongoDB collection
-func InsertOne(collectionName string, data interface{}) (interface{}, error) {
-	collection := link.Collection(collectionName)
+func InsertOne(collection *mongo.Collection, data interface{}) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	res, err := collection.InsertOne(ctx, data)
@@ -24,8 +23,7 @@ func InsertOne(collectionName string, data interface{}) (interface{}, error) {
 }
 
 // InsertMany inserts multiple document into a mongoDB collection
-func InsertMany(collectionName string, data []interface{}) ([]interface{}, error) {
-	collection := link.Collection(collectionName)
+func InsertMany(collection *mongo.Collection, data []interface{}) ([]interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	res, err := collection.InsertMany(ctx, data)
@@ -38,8 +36,7 @@ func InsertMany(collectionName string, data []interface{}) ([]interface{}, error
 // Read Operations
 
 // FetchDocs is a generic function which takes a collection name and mongoDB filter as input and returns documents
-func FetchDocs(collectionName string, filter types.M, opts ...*options.FindOptions) ([]types.M, error) {
-	collection := link.Collection(collectionName)
+func FetchDocs(collection *mongo.Collection, filter types.M, opts ...*options.FindOptions) ([]types.M, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	var data []types.M
@@ -52,8 +49,7 @@ func FetchDocs(collectionName string, filter types.M, opts ...*options.FindOptio
 }
 
 // CountDocs returns the number of documents matching a filter
-func CountDocs(collectionName string, filter types.M) (int64, error) {
-	collection := link.Collection(collectionName)
+func CountDocs(collection *mongo.Collection, filter types.M) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return collection.CountDocuments(ctx, filter)
@@ -62,24 +58,21 @@ func CountDocs(collectionName string, filter types.M) (int64, error) {
 // Update Operations
 
 // UpdateOne updates a document in the mongoDB collection
-func UpdateOne(collectionName string, filter types.M, data interface{}, option *options.FindOneAndUpdateOptions) error {
-	collection := link.Collection(collectionName)
+func UpdateOne(collection *mongo.Collection, filter types.M, data interface{}, option *options.FindOneAndUpdateOptions) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return collection.FindOneAndUpdate(ctx, filter, types.M{"$set": data}, option).Err()
 }
 
 // BulkUpsert upserts multiple documents using BulkWrite
-func BulkUpsert(collectionName string, data []mongo.WriteModel, options *options.BulkWriteOptions) (interface{}, error) {
-	collection := link.Collection(collectionName)
+func BulkUpsert(collection *mongo.Collection, data []mongo.WriteModel, options *options.BulkWriteOptions) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return collection.BulkWrite(ctx, data, options)
 }
 
 // UpdateMany updates multiple documents in the mongoDB collection
-func UpdateMany(collectionName string, filter types.M, data interface{}) (interface{}, error) {
-	collection := link.Collection(collectionName)
+func UpdateMany(collection *mongo.Collection, filter types.M, data interface{}) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return collection.UpdateMany(ctx, filter, types.M{"$set": data}, nil)
@@ -88,8 +81,7 @@ func UpdateMany(collectionName string, filter types.M, data interface{}) (interf
 // Delete Operations
 
 // DeleteOne deletes a document from a mongoDB collection
-func DeleteOne(collectionName string, filter types.M) (interface{}, error) {
-	collection := link.Collection(collectionName)
+func DeleteOne(collection *mongo.Collection, filter types.M) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return collection.DeleteOne(ctx, filter)
