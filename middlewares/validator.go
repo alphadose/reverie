@@ -55,3 +55,25 @@ func ValidateUserRegistration(c *gin.Context) {
 	}
 	c.Next()
 }
+
+// ValidatePostCreation validates the post creation request
+func ValidatePostCreation(c *gin.Context) {
+	requestBody := getBodyFromContext(c)
+	post := &types.Post{}
+	if err := json.Unmarshal(requestBody, post); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if result, err := validator.ValidateStruct(post); !result {
+		c.AbortWithStatusJSON(400, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.Next()
+}

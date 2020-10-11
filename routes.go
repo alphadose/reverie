@@ -37,6 +37,7 @@ func newRouter() http.Handler {
 	{
 		client.GET("", c.GetLoggedInUserInfo)
 		client.PUT("/password", c.UpdatePassword)
+		client.POST("/post", m.ValidatePostCreation, c.CreatePost)
 	}
 
 	vendor := router.Group("/vendor")

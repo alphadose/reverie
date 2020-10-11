@@ -21,8 +21,7 @@ func registerUser(c *gin.Context, role string) {
 
 	unique, err := mongo.IsUniqueEmail(user.GetEmail())
 	if err != nil {
-		utils.LogError("User-Controller-1", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-1", c, err)
 		return
 	}
 	if !unique {
@@ -35,16 +34,14 @@ func registerUser(c *gin.Context, role string) {
 
 	hashedPass, err := utils.HashPassword(user.GetPassword())
 	if err != nil {
-		utils.LogError("User-Controller-2", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-2", c, err)
 		return
 	}
 	user.SetPassword(hashedPass)
 	user.SetRole(role)
 
 	if _, err = mongo.RegisterUser(user); err != nil {
-		utils.LogError("User-Controller-3", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-3", c, err)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -74,8 +71,7 @@ func GetUserInfo(c *gin.Context) {
 			})
 			return
 		}
-		utils.LogError("User-Controller-4", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-4", c, err)
 		return
 	}
 	user.SetSuccess(true)
@@ -86,14 +82,12 @@ func GetUserInfo(c *gin.Context) {
 func GetLoggedInUserInfo(c *gin.Context) {
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.LogError("User-Controller-5", middlewares.ErrFailedExtraction, c)
-		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
+		utils.SendServerErrorResponse("User-Controller-5", c, middlewares.ErrFailedExtraction)
 		return
 	}
 	user, err := mongo.FetchSingleUserWithoutPassword(claims.GetEmail())
 	if err != nil {
-		utils.LogError("User-Controller-6", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-6", c, err)
 		return
 	}
 	user.SetSuccess(true)
@@ -112,14 +106,12 @@ func UpdatePassword(c *gin.Context) {
 	}
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.LogError("User-Controller-7", middlewares.ErrFailedExtraction, c)
-		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
+		utils.SendServerErrorResponse("User-Controller-7", c, middlewares.ErrFailedExtraction)
 		return
 	}
 	user, err := mongo.FetchSingleUser(claims.GetEmail())
 	if err != nil {
-		utils.LogError("User-Controller-8", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-8", c, err)
 		return
 	}
 	if !utils.CompareHashWithPassword(user.GetPassword(), passwordUpdate.GetOldPassword()) {
@@ -131,13 +123,11 @@ func UpdatePassword(c *gin.Context) {
 	}
 	hashedPass, err := utils.HashPassword(passwordUpdate.GetNewPassword())
 	if err != nil {
-		utils.LogError("User-Controller-9", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-9", c, err)
 		return
 	}
 	if err = mongo.UpdatePassword(user.GetEmail(), hashedPass); err != nil {
-		utils.LogError("User-Controller-10", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-10", c, err)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -150,8 +140,7 @@ func UpdatePassword(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.LogError("User-Controller-11", middlewares.ErrFailedExtraction, c)
-		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
+		utils.SendServerErrorResponse("User-Controller-11", c, middlewares.ErrFailedExtraction)
 		return
 	}
 	filter := types.M{
@@ -162,8 +151,7 @@ func DeleteUser(c *gin.Context) {
 	}
 	err := mongo.UpdateUser(filter, updatePayload)
 	if err != nil {
-		utils.LogError("User-Controller-12", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-12", c, err)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -176,8 +164,7 @@ func DeleteUser(c *gin.Context) {
 func UpdateInventory(c *gin.Context) {
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.LogError("User-Controller-13", middlewares.ErrFailedExtraction, c)
-		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
+		utils.SendServerErrorResponse("User-Controller-13", c, middlewares.ErrFailedExtraction)
 		return
 	}
 	inventory := &types.Inventory{}
@@ -189,8 +176,7 @@ func UpdateInventory(c *gin.Context) {
 		return
 	}
 	if err := mongo.UpdateVendorInventory(claims.GetEmail(), inventory); err != nil {
-		utils.LogError("User-Controller-14", err, c)
-		utils.SendServerErrorResponse(c, err)
+		utils.SendServerErrorResponse("User-Controller-14", c, err)
 		return
 	}
 	c.JSON(200, gin.H{

@@ -7,7 +7,8 @@ import (
 
 // SendServerErrorResponse sends internal server error messages
 // to the client depending on development mode or production mode
-func SendServerErrorResponse(c *gin.Context, err error) {
+func SendServerErrorResponse(logContext string, c *gin.Context, err error) {
+	LogError(logContext, err, c)
 	var errMessage string
 	if configs.Project.Debug {
 		errMessage = err.Error()
