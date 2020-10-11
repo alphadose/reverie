@@ -11,7 +11,7 @@ import (
 // IsClient checks whether a user is a client or not
 func IsClient(c *gin.Context) {
 	user := ExtractClaims(c)
-	if user.IsClient() {
+	if user.IsClient() || user.IsAdmin() {
 		c.Next()
 		return
 	}
@@ -24,7 +24,7 @@ func IsClient(c *gin.Context) {
 // IsVendor checks whether a user is a vendor or not
 func IsVendor(c *gin.Context) {
 	user := ExtractClaims(c)
-	if user.IsVendor() {
+	if user.IsVendor() || user.IsAdmin() {
 		c.Next()
 		return
 	}

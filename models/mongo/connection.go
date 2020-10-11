@@ -39,6 +39,25 @@ func setupAdmin() {
 	utils.LogInfo("Mongo-Connection-3", "%s (%s) has been given admin privileges", adminInfo.Username, adminInfo.Email)
 }
 
+func createGeoIndex() {
+	indexes := []mongo.IndexModel{
+		{
+			Keys: types.M{
+				PostLocationKey: "2dsphere",
+			},
+		},
+		{
+			Keys: types.M{
+				UpdatedKey: -1,
+			},
+		},
+	}
+	opts := options.CreateIndexes().SetMaxTime(10 * time.Second)
+	if _, err := postCollection.Indexes().CreateMany(ctx, indexes, opts); err != nil {
+		utils.LogError("Mongo-Connection-7", err)
+	}
+}
+
 func setup() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -51,6 +70,7 @@ func setup() {
 	} else {
 		utils.LogInfo("Mongo-Connection-6", "MongoDB Connection Established")
 		setupAdmin()
+		createGeoIndex()
 	}
 }
 

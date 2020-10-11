@@ -8,6 +8,9 @@ const (
 	// projectDatabase is the name of the database used for storing all of reverie's information
 	projectDatabase = "reverie"
 
+	// PrimaryKey is the primary key for mongoDB documents
+	PrimaryKey = "_id"
+
 	// UserCollectionKey is the collection for all users
 	UserCollectionKey = "users"
 
@@ -31,6 +34,18 @@ const (
 
 	// UserInventoryKey is the key denoting the inventory of a user
 	UserInventoryKey = "inventory"
+
+	// PostRequirementsKey is the key denoting the requirements for a post
+	PostRequirementsKey = "requirements"
+
+	// PostLocationKey is the key denoting the location of a job request
+	PostLocationKey = "location"
+
+	// CreatedKey is the key denoting the timestamp of creation of a job request
+	CreatedKey = "created"
+
+	// UpdatedKey is the key denoting the timestamp at which the job request was last updated
+	UpdatedKey = "updated"
 
 	// timeout is the context timeout for generic operations
 	timeout = 5
