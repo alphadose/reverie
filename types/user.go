@@ -11,30 +11,27 @@ const (
 	Admin = "admin"
 )
 
-// Login is the request body binding for login
-type Login struct {
-	Email    string `form:"email" json:"email" bson:"email" binding:"required"`
-	Password string `form:"password" json:"password,omitempty" bson:"password" binding:"required"`
-}
-
-// GetEmail returns the user's email
-func (auth *Login) GetEmail() string {
-	return auth.Email
-}
-
-// GetPassword returns the user's password
-// The password will be hashed if retrieving from database
-func (auth *Login) GetPassword() string {
-	return auth.Password
+// Inventory stores the items in a vendor's inventory
+type Inventory struct {
+	Truck         string `json:"Truck,omitempty" bson:"Truck,omitempty"`
+	Crane         string `json:"Crane,omitempty" bson:"Crane,omitempty"`
+	Tanker        string `json:"Tanker,omitempty" bson:"Tanker,omitempty"`
+	RoadRoller    string `json:"RoadRoller,omitempty" bson:"RoadRoller,omitempty"`
+	ForkLift      string `json:"ForkLift,omitempty" bson:"ForkLift,omitempty"`
+	BoomLifter    string `json:"BoomLifter,omitempty" bson:"BoomLifter,omitempty"`
+	ManLifter     string `json:"ManLifter,omitempty" bson:"ManLifter,omitempty"`
+	HydraulicJack string `json:"HydraulicJack,omitempty" bson:"HydraulicJack,omitempty"`
+	Manpower      string `json:"Manpower,omitempty" bson:"Manpower,omitempty"`
 }
 
 // User stores user related information
 type User struct {
-	Email    string `form:"email" json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
-	Password string `form:"password" json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
-	Username string `form:"username" json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,alphanum~Field 'username' should only have alphanumeric characters,stringlength(5|40)~Field 'username' should have length between 5 to 40 characters"`
-	Role     string `form:"role" json:"role" bson:"role" valid:"required~Field 'role' is required but was not provided,in(client|vendor)~Field 'Role' should be either client or vendor"`
-	Success  bool   `json:"success,omitempty" bson:"-"`
+	Email     string    `form:"email" json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
+	Password  string    `form:"password" json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
+	Username  string    `form:"username" json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,alphanum~Field 'username' should only have alphanumeric characters,stringlength(5|40)~Field 'username' should have length between 5 to 40 characters"`
+	Role      string    `form:"role" json:"role" bson:"role" valid:"required~Field 'role' is required but was not provided,in(client|vendor)~Field 'Role' should be either client or vendor"`
+	Inventory Inventory `form:"inventory" json:"inventory,omitempty" bson:"inventory,omitempty"`
+	Success   bool      `json:"success,omitempty" bson:"-"`
 }
 
 // GetName returns the user's username

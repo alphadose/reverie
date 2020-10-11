@@ -24,6 +24,7 @@ func registerUser(c *gin.Context, role string) {
 	filter := types.M{mongo.EmailKey: user.Email}
 	count, err := mongo.CountUsers(filter)
 	if err != nil {
+		utils.LogError("User-Controller-1", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -37,6 +38,7 @@ func registerUser(c *gin.Context, role string) {
 
 	hashedPass, err := utils.HashPassword(user.GetPassword())
 	if err != nil {
+		utils.LogError("User-Controller-2", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -44,6 +46,7 @@ func registerUser(c *gin.Context, role string) {
 	user.SetRole(role)
 
 	if _, err = mongo.RegisterUser(user); err != nil {
+		utils.LogError("User-Controller-3", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -74,6 +77,7 @@ func GetUserInfo(c *gin.Context) {
 			})
 			return
 		}
+		utils.LogError("User-Controller-4", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -90,6 +94,7 @@ func GetLoggedInUserInfo(c *gin.Context) {
 	}
 	user, err := mongo.FetchSingleUserWithoutPassword(claims.GetEmail())
 	if err != nil {
+		utils.LogError("User-Controller-5", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -109,11 +114,13 @@ func UpdatePassword(c *gin.Context) {
 	}
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.SendServerErrorResponse(c, errors.New("Failed to extract JWT claims"))
+		utils.LogError("User-Controller-6", middlewares.ErrFailedExtraction, c)
+		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
 		return
 	}
 	user, err := mongo.FetchSingleUser(claims.GetEmail())
 	if err != nil {
+		utils.LogError("User-Controller-7", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -126,6 +133,7 @@ func UpdatePassword(c *gin.Context) {
 	}
 	hashedPass, err := utils.HashPassword(passwordUpdate.GetNewPassword())
 	if err != nil {
+		utils.LogError("User-Controller-8", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -134,6 +142,7 @@ func UpdatePassword(c *gin.Context) {
 		types.M{mongo.PasswordKey: hashedPass},
 	)
 	if err != nil {
+		utils.LogError("User-Controller-9", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -147,7 +156,8 @@ func UpdatePassword(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.SendServerErrorResponse(c, errors.New("Failed to extract JWT claims"))
+		utils.LogError("User-Controller-10", middlewares.ErrFailedExtraction, c)
+		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
 		return
 	}
 	filter := types.M{
@@ -158,6 +168,7 @@ func DeleteUser(c *gin.Context) {
 	}
 	err := mongo.UpdateUser(filter, updatePayload)
 	if err != nil {
+		utils.LogError("User-Controller-11", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}

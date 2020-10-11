@@ -29,6 +29,9 @@ const (
 	// RoleKey is the key denoting the role of a user
 	RoleKey = "role"
 
+	// UserInventoryKey is the key denoting the inventory of a user
+	UserInventoryKey = "inventory"
+
 	// timeout is the context timeout for generic operations
 	timeout = 5
 )

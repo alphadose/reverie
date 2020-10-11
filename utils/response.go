@@ -14,7 +14,6 @@ func SendServerErrorResponse(c *gin.Context, err error) {
 	} else {
 		errMessage = "INTERNAL_SERVER_ERROR"
 	}
-	LogError("Utils-Response-1", err)
 	c.AbortWithStatusJSON(500, gin.H{
 		"success": false,
 		"error":   errMessage,

@@ -31,5 +31,19 @@ func newRouter() http.Handler {
 		auth.GET("/refresh", m.JWT.RefreshHandler)
 	}
 
+	client := router.Group("/client")
+	client.Use(m.JWT.MiddlewareFunc())
+	client.Use(m.IsClient)
+	{
+
+	}
+
+	vendor := router.Group("/vendor")
+	vendor.Use(m.JWT.MiddlewareFunc())
+	vendor.Use(m.IsVendor)
+	{
+
+	}
+
 	return router
 }

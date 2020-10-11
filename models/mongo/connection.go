@@ -33,7 +33,7 @@ func setupAdmin() {
 		Role:     types.Admin,
 	}
 	filter := types.M{EmailKey: adminInfo.Email}
-	if err := UpsertUser(filter, admin); err != nil {
+	if err := UpsertUser(filter, admin); err != nil && err != ErrNoDocuments {
 		utils.LogError("Mongo-Connection-2", err)
 	}
 	utils.LogInfo("Mongo-Connection-3", "%s (%s) has been given admin privileges", adminInfo.Username, adminInfo.Email)

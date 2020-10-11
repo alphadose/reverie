@@ -16,6 +16,8 @@ import (
 var (
 	errMissingCredentials   = errors.New("Missing Email or Password")
 	errFailedAuthentication = errors.New("Incorrect Email or Password")
+	// ErrFailedExtraction occurs when the request fails to extract claims from JWT
+	ErrFailedExtraction = errors.New("Failed to extract JWT claims")
 )
 
 func authenticator(c *gin.Context) (interface{}, error) {
