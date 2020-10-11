@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"errors"
-
 	"github.com/gin-gonic/gin"
 	"github.com/reverie/middlewares"
 	"github.com/reverie/models/mongo"
@@ -21,14 +19,13 @@ func registerUser(c *gin.Context, role string) {
 		return
 	}
 
-	filter := types.M{mongo.EmailKey: user.Email}
-	count, err := mongo.CountUsers(filter)
+	unique, err := mongo.IsUniqueEmail(user.GetEmail())
 	if err != nil {
 		utils.LogError("User-Controller-1", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
-	if count > 0 {
+	if !unique {
 		c.JSON(400, gin.H{
 			"success": false,
 			"error":   "email already registered",
@@ -89,12 +86,13 @@ func GetUserInfo(c *gin.Context) {
 func GetLoggedInUserInfo(c *gin.Context) {
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.SendServerErrorResponse(c, errors.New("Failed to extract JWT claims"))
+		utils.LogError("User-Controller-5", middlewares.ErrFailedExtraction, c)
+		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
 		return
 	}
 	user, err := mongo.FetchSingleUserWithoutPassword(claims.GetEmail())
 	if err != nil {
-		utils.LogError("User-Controller-5", err, c)
+		utils.LogError("User-Controller-6", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -114,13 +112,13 @@ func UpdatePassword(c *gin.Context) {
 	}
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.LogError("User-Controller-6", middlewares.ErrFailedExtraction, c)
+		utils.LogError("User-Controller-7", middlewares.ErrFailedExtraction, c)
 		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
 		return
 	}
 	user, err := mongo.FetchSingleUser(claims.GetEmail())
 	if err != nil {
-		utils.LogError("User-Controller-7", err, c)
+		utils.LogError("User-Controller-8", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -133,16 +131,12 @@ func UpdatePassword(c *gin.Context) {
 	}
 	hashedPass, err := utils.HashPassword(passwordUpdate.GetNewPassword())
 	if err != nil {
-		utils.LogError("User-Controller-8", err, c)
+		utils.LogError("User-Controller-9", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
-	err = mongo.UpdateUser(
-		types.M{mongo.EmailKey: user.GetEmail()},
-		types.M{mongo.PasswordKey: hashedPass},
-	)
-	if err != nil {
-		utils.LogError("User-Controller-9", err, c)
+	if err = mongo.UpdatePassword(user.GetEmail(), hashedPass); err != nil {
+		utils.LogError("User-Controller-10", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
@@ -156,7 +150,7 @@ func UpdatePassword(c *gin.Context) {
 func DeleteUser(c *gin.Context) {
 	claims := middlewares.ExtractClaims(c)
 	if claims == nil {
-		utils.LogError("User-Controller-10", middlewares.ErrFailedExtraction, c)
+		utils.LogError("User-Controller-11", middlewares.ErrFailedExtraction, c)
 		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
 		return
 	}
@@ -168,12 +162,39 @@ func DeleteUser(c *gin.Context) {
 	}
 	err := mongo.UpdateUser(filter, updatePayload)
 	if err != nil {
-		utils.LogError("User-Controller-11", err, c)
+		utils.LogError("User-Controller-12", err, c)
 		utils.SendServerErrorResponse(c, err)
 		return
 	}
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "user deleted",
+	})
+}
+
+// UpdateInventory updates the inventory for a vendor user
+func UpdateInventory(c *gin.Context) {
+	claims := middlewares.ExtractClaims(c)
+	if claims == nil {
+		utils.LogError("User-Controller-13", middlewares.ErrFailedExtraction, c)
+		utils.SendServerErrorResponse(c, middlewares.ErrFailedExtraction)
+		return
+	}
+	inventory := &types.Inventory{}
+	if err := c.BindJSON(inventory); err != nil {
+		c.AbortWithStatusJSON(400, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+	if err := mongo.UpdateVendorInventory(claims.GetEmail(), inventory); err != nil {
+		utils.LogError("User-Controller-14", err, c)
+		utils.SendServerErrorResponse(c, err)
+		return
+	}
+	c.JSON(200, gin.H{
+		"success": true,
+		"message": "inventory updated",
 	})
 }

@@ -35,14 +35,15 @@ func newRouter() http.Handler {
 	client.Use(m.JWT.MiddlewareFunc())
 	client.Use(m.IsClient)
 	{
-
+		client.GET("", c.GetLoggedInUserInfo)
 	}
 
 	vendor := router.Group("/vendor")
 	vendor.Use(m.JWT.MiddlewareFunc())
 	vendor.Use(m.IsVendor)
 	{
-
+		vendor.GET("", c.GetLoggedInUserInfo)
+		vendor.PUT("/inventory", c.UpdateInventory)
 	}
 
 	return router
