@@ -35,7 +35,7 @@ type Post struct {
 	Owner       string             `json:"owner" bson:"owner"`
 	Description string             `json:"description" bson:"description" valid:"required"`
 	Location    Location           `json:"location" bson:"location" valid:"required"`
-	//  Infrastructure required by the client
+	// Infrastructure required by the client
 	Requirements Inventory `json:"requirements" bson:"requirements" valid:"required"`
 	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
 	Offers map[string]Inventory `json:"offers,omitempty" bson:"offers,omitempty"`

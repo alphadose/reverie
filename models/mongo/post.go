@@ -15,8 +15,8 @@ func CreatePost(post *types.Post) (interface{}, error) {
 	return InsertOne(postCollection, post)
 }
 
-// AddOfferToPost adds an offer to a post
-func AddOfferToPost(postID, vendorEmail string, offer *types.Inventory) error {
+// UpdatePostOffers adds/updates an offer to a post
+func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
