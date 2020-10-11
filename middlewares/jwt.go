@@ -96,6 +96,7 @@ var JWT = &jwt.GinJWTMiddleware{
 }
 
 // ExtractClaims takes the gin context and returns the User
+// IMPORTANT: claims shall only provide the email, username and the role of a user
 func ExtractClaims(c *gin.Context) *types.User {
 	user, success := JWT.IdentityHandler(c).(*types.User)
 	if !success {

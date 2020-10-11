@@ -36,6 +36,7 @@ func newRouter() http.Handler {
 	client.Use(m.IsClient)
 	{
 		client.GET("", c.GetLoggedInUserInfo)
+		client.PUT("/password", c.UpdatePassword)
 	}
 
 	vendor := router.Group("/vendor")
@@ -44,6 +45,7 @@ func newRouter() http.Handler {
 	{
 		vendor.GET("", c.GetLoggedInUserInfo)
 		vendor.PUT("/inventory", c.UpdateInventory)
+		vendor.PUT("/password", c.UpdatePassword)
 	}
 
 	return router
