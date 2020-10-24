@@ -10,10 +10,13 @@ import (
 const (
 	// OPEN denotes the status when a job request is open for offerings
 	OPEN = "OPEN"
+
 	// ONGOING denotes the status when a job request is in progress
 	ONGOING = "ONGOING"
+
 	// COMPLETED denotes the status when a job request is successfully completed
 	COMPLETED = "COMPLETED"
+
 	// DELETED denotes the status when a job request is removed by the client who posted it
 	DELETED = "DELETED"
 )
@@ -22,8 +25,8 @@ const (
 type Location struct {
 	// Always "Point"
 	Type       string `json:"-" bson:"type"`
-	Latitude   string `json:"latitude" bson:"-" valid:"required,latitude"`
-	Longtitude string `json:"longitude" bson:"-" valid:"required,longitude"`
+	Latitude   string `json:"latitude" bson:"latitude" valid:"required,latitude"`
+	Longtitude string `json:"longitude" bson:"longitude" valid:"required,longitude"`
 	// Coordinates are in the form of [longitude, latitude] according to GeoJSON specifications
 	Coordinates []float64 `json:"-" bson:"coordinates"`
 	Place       string    `json:"place" bson:"place" valid:"required"`

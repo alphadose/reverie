@@ -1,6 +1,8 @@
 # github.com/BurntSushi/toml v0.3.1
 ## explicit
 github.com/BurntSushi/toml
+# github.com/andybalholm/brotli v1.0.0
+github.com/andybalholm/brotli
 # github.com/appleboy/gin-jwt/v2 v2.6.4
 ## explicit
 github.com/appleboy/gin-jwt/v2
@@ -29,7 +31,6 @@ github.com/aws/aws-sdk-go/private/protocol/rest
 github.com/dgrijalva/jwt-go
 # github.com/gin-contrib/cors v1.3.1
 ## explicit
-github.com/gin-contrib/cors
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
 # github.com/gin-gonic/gin v1.6.3
@@ -48,6 +49,17 @@ github.com/go-playground/universal-translator
 github.com/go-playground/validator/v10
 # github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack
+# github.com/gofiber/fiber/v2 v2.1.1
+## explicit
+github.com/gofiber/fiber/v2
+github.com/gofiber/fiber/v2/internal/bytebufferpool
+github.com/gofiber/fiber/v2/internal/colorable
+github.com/gofiber/fiber/v2/internal/encoding/ascii
+github.com/gofiber/fiber/v2/internal/encoding/json
+github.com/gofiber/fiber/v2/internal/isatty
+github.com/gofiber/fiber/v2/internal/schema
+github.com/gofiber/fiber/v2/middleware/cors
+github.com/gofiber/fiber/v2/utils
 # github.com/golang/protobuf v1.4.1
 ## explicit
 github.com/golang/protobuf/proto
@@ -57,11 +69,13 @@ github.com/golang/snappy
 github.com/jmespath/go-jmespath
 # github.com/json-iterator/go v1.1.9
 github.com/json-iterator/go
-# github.com/klauspost/compress v1.10.5
-## explicit
+# github.com/klauspost/compress v1.10.7
+github.com/klauspost/compress/flate
 github.com/klauspost/compress/fse
+github.com/klauspost/compress/gzip
 github.com/klauspost/compress/huff0
 github.com/klauspost/compress/snappy
+github.com/klauspost/compress/zlib
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/leodido/go-urn v1.2.0
@@ -76,6 +90,15 @@ github.com/modern-go/reflect2
 github.com/pkg/errors
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
+# github.com/valyala/bytebufferpool v1.0.0
+github.com/valyala/bytebufferpool
+# github.com/valyala/fasthttp v1.16.0
+github.com/valyala/fasthttp
+github.com/valyala/fasthttp/fasthttputil
+github.com/valyala/fasthttp/reuseport
+github.com/valyala/fasthttp/stackless
+# github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
+github.com/valyala/tcplisten
 # github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 github.com/xdg/scram
 # github.com/xdg/stringprep v1.0.0
@@ -121,16 +144,14 @@ golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/ocsp
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
-## explicit
 # golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20200509044756-6aff5f38e54f
-## explicit
+# golang.org/x/sys v0.0.0-20201020230747-6e5568b54d1a
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
+golang.org/x/sys/windows
 # golang.org/x/text v0.3.3
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm

@@ -1,53 +1,45 @@
 package main
 
 import (
-	"net/http"
-	"time"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	c "github.com/reverie/controllers"
-	m "github.com/reverie/middlewares"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
-func newRouter() http.Handler {
-	router := gin.Default()
+func newRouter() *fiber.App {
+	router := fiber.New()
 
-	corsConfig := cors.Config{
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Cookie"},
-		AllowCredentials: false,
-		AllowAllOrigins:  true,
-		MaxAge:           12 * time.Hour,
-	}
-	router.Use(cors.New(corsConfig))
-	router.NoRoute(c.Handle404)
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Content-Length, Accept, Authorization, Cookie",
+	}))
 
-	auth := router.Group("/auth")
-	{
-		auth.POST("/login", m.JWT.LoginHandler)
-		auth.POST("/register/client", m.ValidateUserRegistration, c.RegisterClient)
-		auth.POST("/register/vendor", m.ValidateUserRegistration, c.RegisterVendor)
-		auth.GET("/refresh", m.JWT.RefreshHandler)
-	}
+	// auth := router.Group("/auth")
+	// {
+	// 	auth.Post("/login", m.JWT.LoginHandler)
+	// 	auth.Post("/register/client", m.ValidateUserRegistration, c.RegisterClient)
+	// 	auth.Post("/register/vendor", m.ValidateUserRegistration, c.RegisterVendor)
+	// 	auth.Get("/refresh", m.JWT.RefreshHandler)
+	// }
 
-	client := router.Group("/client")
-	client.Use(m.JWT.MiddlewareFunc())
-	client.Use(m.IsClient)
-	{
-		client.GET("", c.GetLoggedInUserInfo)
-		client.PUT("/password", c.UpdatePassword)
-		client.POST("/post", m.ValidatePostCreation, c.CreatePost)
-	}
+	// client := router.Group("/client")
+	// client.Use(m.JWT.MiddlewareFunc())
+	// client.Use(m.IsClient)
+	// {
+	// 	client.Get("", c.GetLoggedInUserInfo)
+	// 	client.Put("/password", c.UpdatePassword)
+	// 	client.Post("/post", m.ValidatePostCreation, c.CreatePost)
+	// }
 
-	vendor := router.Group("/vendor")
-	vendor.Use(m.JWT.MiddlewareFunc())
-	vendor.Use(m.IsVendor)
-	{
-		vendor.GET("", c.GetLoggedInUserInfo)
-		vendor.PUT("/inventory", c.UpdateInventory)
-		vendor.PUT("/password", c.UpdatePassword)
-	}
+	// vendor := router.Group("/vendor")
+	// vendor.Use(m.JWT.MiddlewareFunc())
+	// vendor.Use(m.IsVendor)
+	// {
+	// 	vendor.Get("", c.GetLoggedInUserInfo)
+	// 	vendor.Put("/inventory", c.UpdateInventory)
+	// 	vendor.Put("/password", c.UpdatePassword)
+	// }
+
+	// router.Use(c.Handle404)
 
 	return router
 }
