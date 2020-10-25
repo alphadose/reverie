@@ -100,11 +100,11 @@ func LogDebug(context, template string, args ...interface{}) {
 }
 
 // LogError logs type error to console
-func LogError(context string, err error, trace ...interface{}) {
+func LogError(context string, err error) {
 	if err == nil {
 		return
 	}
-	out(context, fmt.Sprintf("Error: %s Trace: %v", err.Error(), trace), ErrorTAG)
+	out(context, err.Error(), ErrorTAG)
 }
 
 // // LogResErr logs type ResponseError to console

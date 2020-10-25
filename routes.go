@@ -1,45 +1,50 @@
 package main
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	c "github.com/reverie/controllers"
+	m "github.com/reverie/middlewares"
 )
 
 func newRouter() *fiber.App {
-	router := fiber.New()
+	router := fiber.New(fiber.Config{
+		ErrorHandler: c.ErrorHandler,
+		Prefork:      true,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	})
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Content-Length, Accept, Authorization, Cookie",
 	}))
 
-	// auth := router.Group("/auth")
-	// {
-	// 	auth.Post("/login", m.JWT.LoginHandler)
-	// 	auth.Post("/register/client", m.ValidateUserRegistration, c.RegisterClient)
-	// 	auth.Post("/register/vendor", m.ValidateUserRegistration, c.RegisterVendor)
-	// 	auth.Get("/refresh", m.JWT.RefreshHandler)
-	// }
+	auth := router.Group("/auth")
+	{
+		auth.Post("/login", c.Login)
+		auth.Post("/register/client", c.RegisterClient)
+		auth.Post("/register/vendor", c.RegisterVendor)
+		// auth.Get("/refresh", m.JWT.RefreshHandler)
+	}
 
-	// client := router.Group("/client")
-	// client.Use(m.JWT.MiddlewareFunc())
-	// client.Use(m.IsClient)
-	// {
-	// 	client.Get("", c.GetLoggedInUserInfo)
-	// 	client.Put("/password", c.UpdatePassword)
-	// 	client.Post("/post", m.ValidatePostCreation, c.CreatePost)
-	// }
+	client := router.Group("/client", m.JWT, m.IsClient)
+	{
+		client.Get("", c.GetLoggedInUserInfo)
+		client.Put("/password", c.UpdatePassword)
+		client.Post("/post", c.CreatePost)
+	}
 
-	// vendor := router.Group("/vendor")
-	// vendor.Use(m.JWT.MiddlewareFunc())
-	// vendor.Use(m.IsVendor)
-	// {
-	// 	vendor.Get("", c.GetLoggedInUserInfo)
-	// 	vendor.Put("/inventory", c.UpdateInventory)
-	// 	vendor.Put("/password", c.UpdatePassword)
-	// }
+	vendor := router.Group("/vendor", m.JWT, m.IsVendor)
+	{
+		vendor.Get("", c.GetLoggedInUserInfo)
+		vendor.Put("/inventory", c.UpdateInventory)
+		vendor.Put("/password", c.UpdatePassword)
+	}
 
-	// router.Use(c.Handle404)
+	router.Use(c.Handle404)
 
 	return router
 }

@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"github.com/reverie/types"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -21,16 +22,16 @@ const (
 	NameKey = "name"
 
 	// EmailKey is the key holding the email of a user
-	EmailKey = "email"
+	EmailKey = types.EmailKey
 
 	// UsernameKey is the key holding the username of a user
-	UsernameKey = "username"
+	UsernameKey = types.UsernameKey
 
 	// PasswordKey is the key holding the password of a user/instance
 	PasswordKey = "password"
 
 	// RoleKey is the key denoting the role of a user
-	RoleKey = "role"
+	RoleKey = types.RoleKey
 
 	// UserInventoryKey is the key denoting the inventory of a user
 	UserInventoryKey = "inventory"

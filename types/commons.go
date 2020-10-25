@@ -3,6 +3,23 @@ package types
 // M is a shorthand notation for map[string]interface{}
 type M map[string]interface{}
 
+const (
+	// Success holds the response key for "success" field
+	Success = "success"
+
+	// Error holds the response key for "error" field
+	Error = "error"
+
+	// EmailKey is the key holding the email of a user
+	EmailKey = "email"
+
+	// UsernameKey is the key holding the username of a user
+	UsernameKey = "username"
+
+	// RoleKey is the key denoting the role of a user
+	RoleKey = "role"
+)
+
 // Inventory stores the items in a vendor's inventory
 type Inventory struct {
 	Truck         int `json:"Truck,omitempty" bson:"Truck,omitempty"`

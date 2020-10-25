@@ -61,6 +61,9 @@ lint:
 	@golint -set_exit_status $(PACKAGES)
 	@printf "👍 Done\n"
 
+## precommit: Formats, vets and lints the codebase before commit
+precommit: fmt vet lint
+
 ## test: Run tests
 test:
 	@printf "🔨 Testing\n"

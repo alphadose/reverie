@@ -1,40 +1,37 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/reverie/middlewares"
+	validator "github.com/asaskevich/govalidator"
+	"github.com/gofiber/fiber/v2"
 	"github.com/reverie/models/mongo"
 	"github.com/reverie/types"
 	"github.com/reverie/utils"
 )
 
 // CreatePost creates a post requested by a client
-func CreatePost(c *gin.Context) {
+func CreatePost(c *fiber.Ctx) error {
 	post := &types.Post{}
-	if err := c.BindJSON(post); err != nil {
-		c.AbortWithStatusJSON(400, gin.H{
-			"success": false,
-			"error":   err.Error(),
-		})
-		return
+	if err := c.BodyParser(post); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	claims := middlewares.ExtractClaims(c)
+
+	if result, err := validator.ValidateStruct(post); !result {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		utils.SendServerErrorResponse("Post-Controller-1", c, middlewares.ErrFailedExtraction)
-		return
+		return utils.ServerError("Post-Controller-1", utils.ErrFailedExtraction)
 	}
 	if err := post.Initialize(); err != nil {
-		utils.SendServerErrorResponse("Post-Controller-2", c, err)
-		return
+		return utils.ServerError("Post-Controller-2", err)
 	}
 	post.SetOwner(claims.GetEmail())
 
 	if _, err := mongo.CreatePost(post); err != nil {
-		utils.SendServerErrorResponse("Post-Controller-3", c, err)
-		return
+		return utils.ServerError("Post-Controller-3", err)
 	}
-	c.JSON(200, gin.H{
-		"success": true,
-		"message": "post created",
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
 	})
 }
