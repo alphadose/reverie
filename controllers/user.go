@@ -112,26 +112,26 @@ func UpdatePassword(c *fiber.Ctx) error {
 	})
 }
 
-// DeleteUser deletes the user from database
-func DeleteUser(c *fiber.Ctx) error {
-	claims := utils.ExtractClaims(c)
-	if claims == nil {
-		return utils.ServerError("User-Controller-11", utils.ErrFailedExtraction)
-	}
-	filter := types.M{
-		mongo.EmailKey: claims.GetEmail(),
-	}
-	updatePayload := types.M{
-		"deleted": true,
-	}
-	err := mongo.UpdateUser(filter, updatePayload)
-	if err != nil {
-		return utils.ServerError("User-Controller-12", err)
-	}
-	return c.Status(fiber.StatusOK).JSON(types.M{
-		types.Success: true,
-	})
-}
+// // DeleteUser deletes the user from database
+// func DeleteUser(c *fiber.Ctx) error {
+// 	claims := utils.ExtractClaims(c)
+// 	if claims == nil {
+// 		return utils.ServerError("User-Controller-11", utils.ErrFailedExtraction)
+// 	}
+// 	filter := types.M{
+// 		mongo.EmailKey: claims.GetEmail(),
+// 	}
+// 	updatePayload := types.M{
+// 		"deleted": true,
+// 	}
+// 	err := mongo.UpdateUser(filter, updatePayload)
+// 	if err != nil {
+// 		return utils.ServerError("User-Controller-12", err)
+// 	}
+// 	return c.Status(fiber.StatusOK).JSON(types.M{
+// 		types.Success: true,
+// 	})
+// }
 
 // UpdateInventory updates the inventory for a vendor user
 func UpdateInventory(c *fiber.Ctx) error {

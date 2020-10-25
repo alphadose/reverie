@@ -32,7 +32,7 @@ func setupAdmin() {
 		Password: pwd,
 		Role:     types.Admin,
 	}
-	filter := types.M{EmailKey: adminInfo.Email}
+	filter := types.M{userEmailKey: adminInfo.Email}
 	if err := UpsertUser(filter, admin); err != nil && err != ErrNoDocuments {
 		utils.LogError("Mongo-Connection-2", err)
 	}
@@ -43,12 +43,12 @@ func createGeoIndex() {
 	indexes := []mongo.IndexModel{
 		{
 			Keys: types.M{
-				PostLocationKey: "2dsphere",
+				postLocationKey: "2dsphere",
 			},
 		},
 		{
 			Keys: types.M{
-				UpdatedKey: -1,
+				updatedKey: -1,
 			},
 		},
 	}

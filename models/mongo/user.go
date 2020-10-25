@@ -8,8 +8,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	// userCollectionKey is the collection for all users
+	userCollectionKey = "users"
+
+	// userEmailKey is the key holding the email of a user
+	userEmailKey = types.EmailKey
+
+	// usernameKey is the key holding the username of a user
+	usernameKey = types.UsernameKey
+
+	// userPasswordKey is the key holding the password of a user/instance
+	userPasswordKey = "password"
+
+	// userRoleKey is the key denoting the role of a user
+	userRoleKey = types.RoleKey
+
+	// userInventoryKey is the key denoting the inventory of a user
+	userInventoryKey = "inventory"
+)
+
 // The link to the user collection
-var userCollection = db.Collection(UserCollectionKey)
+var userCollection = db.Collection(userCollectionKey)
 
 // UpsertUser is an abstraction over UpdateOne which updates a user
 // or inserts it if the corresponding document doesn't exist
@@ -25,10 +45,10 @@ func UpdateUser(filter types.M, data interface{}) error {
 // UpdateVendorInventory is an abstraction over UpdateOne which updates the vendor's inventory
 func UpdateVendorInventory(email string, inventory *types.Inventory) error {
 	filter := types.M{
-		EmailKey: email,
+		userEmailKey: email,
 	}
 	updatePayload := types.M{
-		UserInventoryKey: inventory,
+		userInventoryKey: inventory,
 	}
 	return UpdateOne(userCollection, filter, updatePayload, nil)
 }
@@ -36,10 +56,10 @@ func UpdateVendorInventory(email string, inventory *types.Inventory) error {
 // UpdatePassword is an abstraction over UpdateOne which updates a user's password
 func UpdatePassword(email, newHashedPassword string) error {
 	filter := types.M{
-		EmailKey: email,
+		userEmailKey: email,
 	}
 	updatePayload := types.M{
-		PasswordKey: newHashedPassword,
+		userPasswordKey: newHashedPassword,
 	}
 	return UpdateOne(userCollection, filter, updatePayload, nil)
 }
@@ -55,7 +75,7 @@ func FetchSingleUser(email string, opts ...*options.FindOneOptions) (*types.User
 	defer cancel()
 
 	user := &types.User{}
-	err := userCollection.FindOne(ctx, types.M{EmailKey: email}, opts...).Decode(user)
+	err := userCollection.FindOne(ctx, types.M{userEmailKey: email}, opts...).Decode(user)
 	return user, err
 }
 
@@ -64,13 +84,13 @@ func FetchSingleUserWithoutPassword(email string) (*types.User, error) {
 	return FetchSingleUser(
 		email,
 		&options.FindOneOptions{
-			Projection: types.M{PasswordKey: 0},
+			Projection: types.M{userPasswordKey: 0},
 		})
 }
 
 // IsUniqueEmail checks if an email id is unique or not
 func IsUniqueEmail(email string) (bool, error) {
-	count, err := CountDocs(userCollection, types.M{EmailKey: email})
+	count, err := CountDocs(userCollection, types.M{userEmailKey: email})
 	if err != nil {
 		return false, err
 	}
