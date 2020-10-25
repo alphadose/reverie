@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -107,16 +108,11 @@ func LogError(context string, err error) {
 	out(context, err.Error(), ErrorTAG)
 }
 
-// // LogResErr logs type ResponseError to console
-// func LogResErr(context string, e types.ResponseError) {
-// 	message := fmt.Sprintf("%d: %s\n%s", e.Status(), e.Message(), e.Verbose())
-// 	out(context, message, ErrorTAG)
-// }
-
 func init() {
+	_ = os.MkdirAll("logs", 0755)
 	if configs.Project.Debug {
-		logfile, _ = os.Create("reverie.log")
+		logfile, _ = os.Create(filepath.Join("logs", "reverie.log"))
 	} else {
-		logfile, _ = os.Create("reverie-" + getTimeStamp() + ".log")
+		logfile, _ = os.Create(filepath.Join("logs", filepath.Base(fmt.Sprintf("reverie-%d-%s.log", os.Getpid(), getTimeStamp()))))
 	}
 }

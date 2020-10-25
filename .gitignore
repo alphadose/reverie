@@ -8,4 +8,4 @@ bin/
 .DS_Store
 coverage.txt
 __debug_bin
-reverie*.log
+logs/
