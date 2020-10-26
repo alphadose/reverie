@@ -114,14 +114,21 @@ func UpdatePost(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	if !postUpdate.Location.Empty() {
+		if result, err := validator.ValidateStruct(postUpdate.Location); !result {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+		if err := postUpdate.InitializeLocation(); err != nil {
+			return utils.ServerError("Post-Controller-10", err)
+		}
+	}
+
 	postID := c.Params("id")
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-10", utils.ErrFailedExtraction)
+		return utils.ServerError("Post-Controller-11", utils.ErrFailedExtraction)
 	}
-	if err := postUpdate.InitializeLocation(); err != nil {
-		return utils.ServerError("Post-Controller-11", err)
-	}
+
 	if err := mongo.UpdatePost(postID, claims.GetEmail(), postUpdate); err != nil {
 		return utils.ServerError("Post-Controller-12", err)
 	}

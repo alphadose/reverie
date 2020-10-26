@@ -18,6 +18,9 @@ const (
 
 	// RoleKey is the key denoting the role of a user
 	RoleKey = "role"
+
+	// EMPTY denotes the empty string
+	EMPTY = ""
 )
 
 // Inventory stores the items in a vendor's inventory

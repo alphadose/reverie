@@ -25,15 +25,16 @@ const (
 type Location struct {
 	// Always "Point"
 	Type       string `json:"-" bson:"type"`
-	Latitude   string `json:"latitude" bson:"latitude" valid:"required,latitude"`
-	Longtitude string `json:"longitude" bson:"longitude" valid:"required,longitude"`
+	Latitude   string `json:"latitude" bson:"latitude,omitempty" valid:"required,latitude"`
+	Longtitude string `json:"longitude" bson:"longitude,omitempty" valid:"required,longitude"`
 	// Coordinates are in the form of [longitude, latitude] according to GeoJSON specifications
-	Coordinates []float64 `json:"-" bson:"coordinates"`
-	Place       string    `json:"place" bson:"place" valid:"required"`
+	Coordinates []float64 `json:"-" bson:"coordinates,omitempty"`
+	Place       string    `json:"place" bson:"place,omitempty" valid:"required"`
 }
 
-func (loc Location) isEmpty() bool {
-	return loc.Latitude == "" && loc.Longtitude == "" && loc.Place == ""
+// Empty checks if the location struct is empty or not
+func (loc Location) Empty() bool {
+	return loc.Latitude == EMPTY && loc.Longtitude == EMPTY && loc.Place == EMPTY
 }
 
 // Post stores the information about a job request
@@ -93,18 +94,14 @@ func (post *Post) UpdateOffers(vendorEmail string, vendorOfferings Inventory) {
 
 // PostUpdate stores the information about a job request which can be updated
 type PostUpdate struct {
-	Description string   `json:"description" bson:"description"`
-	Location    Location `json:"location" bson:"location"`
+	Description string   `json:"description" bson:"description,omitempty"`
+	Location    Location `json:"location" bson:"location,omitempty"`
 	// Infrastructure required by the client
-	Requirements Inventory `json:"requirements" bson:"requirements"`
+	Requirements Inventory `json:"requirements" bson:"requirements,omitempty"`
 }
 
 // InitializeLocation initializes the post update location paramters
 func (postUpdate *PostUpdate) InitializeLocation() error {
-	// Check if empty struct
-	if postUpdate.Location.isEmpty() {
-		return nil
-	}
 	// Location
 	latitude, err := strconv.ParseFloat(postUpdate.Location.Latitude, 64)
 	if err != nil {
