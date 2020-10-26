@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/reverie/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,6 +22,9 @@ const (
 	// postOwnerKey is the key holding the owner email of a post
 	postOwnerKey = "owner"
 
+	// postStatusKey is the key holding the status of a post
+	postStatusKey = "status"
+
 	// createdKey is the key denoting the timestamp of creation of a job request
 	createdKey = "created"
 
@@ -29,6 +33,11 @@ const (
 )
 
 var postCollection = db.Collection(postCollectionKey)
+
+// convert "." to "_" for storing in mongoDB
+func processEmail(email string) string {
+	return strings.ReplaceAll(email, ".", "_")
+}
 
 // CreatePost is an abstraction over InsertOne which inserts a post
 func CreatePost(post *types.Post) (interface{}, error) {
@@ -42,17 +51,21 @@ func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error 
 		return err
 	}
 	filter := types.M{
-		PrimaryKey: docID,
+		primaryKey: docID,
 	}
 	updatePayload := types.M{
-		fmt.Sprintf("%s.%s", postRequirementsKey, vendorEmail): offer,
+		fmt.Sprintf("%s.%s", postRequirementsKey, processEmail(vendorEmail)): offer,
 	}
 	return UpdateOne(postCollection, filter, updatePayload, options.FindOneAndUpdate().SetUpsert(true))
 }
 
-// FetchPostsByClient returns all posts created by a client
-func FetchPostsByClient(email string) ([]types.M, error) {
+// FetchActivePostsByClient returns all open/ongoing posts created by a client
+func FetchActivePostsByClient(email string) ([]types.M, error) {
 	return FetchDocs(postCollection, types.M{
 		postOwnerKey: email,
+		"$or": []types.M{
+			{postStatusKey: types.OPEN},
+			{postStatusKey: types.ONGOING},
+		},
 	})
 }

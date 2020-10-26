@@ -21,7 +21,7 @@ var (
 
 // ExtractClaims takes the fiber context and returns the User
 // IMPORTANT: claims shall only provide the email, username and the role of a user
-func ExtractClaims(c *fiber.Ctx) *types.User {
+func ExtractClaims(c *fiber.Ctx) *types.Claims {
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	email, ok := claims[types.EmailKey].(string)
@@ -36,7 +36,7 @@ func ExtractClaims(c *fiber.Ctx) *types.User {
 	if !ok {
 		return nil
 	}
-	return &types.User{
+	return &types.Claims{
 		Email:    email,
 		Username: username,
 		Role:     role,

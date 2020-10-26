@@ -8,8 +8,8 @@ const (
 	// projectDatabase is the name of the database used for storing all of reverie's information
 	projectDatabase = "reverie"
 
-	// PrimaryKey is the primary key for mongoDB documents
-	PrimaryKey = "_id"
+	// primaryKey is the primary key for mongoDB documents
+	primaryKey = "_id"
 
 	// timeout is the context timeout for generic operations
 	timeout = 5
