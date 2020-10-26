@@ -32,6 +32,10 @@ type Location struct {
 	Place       string    `json:"place" bson:"place" valid:"required"`
 }
 
+func (loc Location) isEmpty() bool {
+	return loc.Latitude == "" && loc.Longtitude == "" && loc.Place == ""
+}
+
 // Post stores the information about a job request
 type Post struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -85,4 +89,33 @@ func (post *Post) SetOwner(ownerEmail string) {
 // UpdateOffers updates the vendor's offerings in the post's context
 func (post *Post) UpdateOffers(vendorEmail string, vendorOfferings Inventory) {
 	post.Offers[vendorEmail] = vendorOfferings
+}
+
+// PostUpdate stores the information about a job request which can be updated
+type PostUpdate struct {
+	Description string   `json:"description" bson:"description"`
+	Location    Location `json:"location" bson:"location"`
+	// Infrastructure required by the client
+	Requirements Inventory `json:"requirements" bson:"requirements"`
+}
+
+// InitializeLocation initializes the post update location paramters
+func (postUpdate *PostUpdate) InitializeLocation() error {
+	// Check if empty struct
+	if postUpdate.Location.isEmpty() {
+		return nil
+	}
+	// Location
+	latitude, err := strconv.ParseFloat(postUpdate.Location.Latitude, 64)
+	if err != nil {
+		return err
+	}
+	longitude, err := strconv.ParseFloat(postUpdate.Location.Longtitude, 64)
+	if err != nil {
+		return err
+	}
+	postUpdate.Location.Coordinates = []float64{longitude, latitude}
+	postUpdate.Location.Type = "Point"
+
+	return nil
 }

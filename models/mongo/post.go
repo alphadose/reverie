@@ -44,6 +44,19 @@ func CreatePost(post *types.Post) (interface{}, error) {
 	return insertOne(postCollection, post)
 }
 
+// UpdatePost updates a post by a client
+func UpdatePost(postID, clientEmail string, post *types.PostUpdate) error {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	filter := types.M{
+		primaryKey:   docID,
+		postOwnerKey: clientEmail,
+	}
+	return updateOne(postCollection, filter, post)
+}
+
 // UpdatePostOffers adds/updates an offer to a post
 func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
@@ -68,4 +81,20 @@ func FetchActivePostsByClient(email string) ([]types.M, error) {
 			{postStatusKey: types.ONGOING},
 		},
 	})
+}
+
+// UpdatePostStatus updates the status of the post
+func UpdatePostStatus(postID, clientEmail, newStatus string) error {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	filter := types.M{
+		primaryKey:   docID,
+		postOwnerKey: clientEmail,
+	}
+	updatePayload := types.M{
+		postStatusKey: newStatus,
+	}
+	return updateOne(postCollection, filter, updatePayload)
 }

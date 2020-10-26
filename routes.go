@@ -36,6 +36,12 @@ func newRouter() *fiber.App {
 		client.Put("/password", c.UpdatePassword)
 		client.Get("/post", c.FetchActivePostsByClient)
 		client.Post("/post", c.CreatePost)
+		client.Put("/post/:id", c.UpdatePost)
+		client.Patch("/post/:id/activate", c.ActivatePost)
+		client.Patch("/post/:id/deactivate", c.DeactivatePost)
+		// TODO: update vendor inventory after completion/ Debatable too constricting feature
+		// maybe reduce inventory on acceptance, seems right
+		client.Patch("/post/:id/complete", c.MarkComplete)
 	}
 
 	vendor := router.Group("/vendor", m.JWT, m.IsVendor)
@@ -43,6 +49,7 @@ func newRouter() *fiber.App {
 		vendor.Get("", c.GetLoggedInUserInfo)
 		vendor.Put("/inventory", c.UpdateInventory)
 		vendor.Put("/password", c.UpdatePassword)
+		// TODO: update vendor inventory after offer/  Debatable too constricting feature
 		vendor.Put("/post/:id", c.MakeOffer)
 	}
 

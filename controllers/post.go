@@ -71,3 +71,61 @@ func MakeOffer(c *fiber.Ctx) error {
 		types.Success: true,
 	})
 }
+
+// updatePostStatus updates the status of a post
+func updatePostStatus(c *fiber.Ctx, status string) error {
+	postID := c.Params("id")
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-8", utils.ErrFailedExtraction)
+	}
+	if err := mongo.UpdatePostStatus(postID, claims.GetEmail(), status); err != nil {
+		return utils.ServerError("Post-Controller-9", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}
+
+// ActivatePost intiates the post by marking its status as "ONGOING"
+// No new offers can be made to this post
+// This marks the start of the job defined in the post
+func ActivatePost(c *fiber.Ctx) error {
+	return updatePostStatus(c, types.ONGOING)
+}
+
+// DeactivatePost changes the post status from "ONGOING" to "OPEN"
+// so that the client can accept new offers
+func DeactivatePost(c *fiber.Ctx) error {
+	return updatePostStatus(c, types.OPEN)
+}
+
+// MarkComplete marks the status of the post as "COMPLETED"
+// Denotes the end of a job request
+func MarkComplete(c *fiber.Ctx) error {
+	return updatePostStatus(c, types.COMPLETED)
+}
+
+// UpdatePost updates the post by a client
+// Can only update description, location and requirements
+func UpdatePost(c *fiber.Ctx) error {
+	postUpdate := &types.PostUpdate{}
+	if err := c.BodyParser(postUpdate); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	postID := c.Params("id")
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-10", utils.ErrFailedExtraction)
+	}
+	if err := postUpdate.InitializeLocation(); err != nil {
+		return utils.ServerError("Post-Controller-11", err)
+	}
+	if err := mongo.UpdatePost(postID, claims.GetEmail(), postUpdate); err != nil {
+		return utils.ServerError("Post-Controller-12", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}

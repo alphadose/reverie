@@ -58,17 +58,17 @@ func countDocs(collection *mongo.Collection, filter types.M) (int64, error) {
 // Update Operations
 
 // updateOne updates a document in the mongoDB collection
-func updateOne(collection *mongo.Collection, filter types.M, data interface{}, option *options.FindOneAndUpdateOptions) error {
+func updateOne(collection *mongo.Collection, filter types.M, data interface{}, opts ...*options.FindOneAndUpdateOptions) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
-	return collection.FindOneAndUpdate(ctx, filter, types.M{"$set": data}, option).Err()
+	return collection.FindOneAndUpdate(ctx, filter, types.M{"$set": data}, opts...).Err()
 }
 
 // bulkUpsert upserts multiple documents using BulkWrite
-func bulkUpsert(collection *mongo.Collection, data []mongo.WriteModel, options *options.BulkWriteOptions) (interface{}, error) {
+func bulkUpsert(collection *mongo.Collection, data []mongo.WriteModel, opts ...*options.BulkWriteOptions) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
-	return collection.BulkWrite(ctx, data, options)
+	return collection.BulkWrite(ctx, data, opts...)
 }
 
 // updateMany updates multiple documents in the mongoDB collection
