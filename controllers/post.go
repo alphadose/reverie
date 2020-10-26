@@ -177,3 +177,39 @@ func FetchPostsByVendor(c *fiber.Ctx) error {
 		"data":        openPosts,
 	})
 }
+
+// FetchContractedPostsByVendor returns all posts in which the vendor's offer has been accepted
+func FetchContractedPostsByVendor(c *fiber.Ctx) error {
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction)
+	}
+	contractedPosts, err := mongo.FetchContractedPostsByVendor(claims.GetEmail())
+	if err != nil {
+		return utils.ServerError("Post-Controller-17", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+		"data":        contractedPosts,
+	})
+}
+
+// AcceptOffer accepts an offer made by a vendor on a post
+// This operation is invoked by the client who is the owner of the post
+// The param "offerKey" is key of the post holding the offer
+// It is in the form of the vendor's email who made the offer with all "." replaced with "_"
+// For Ex:- If the vendor's email is abc.2000@xyz.com the the key will be abc_2000@xyz_com
+func AcceptOffer(c *fiber.Ctx) error {
+	postID := c.Params("id")
+	offerKey := c.Params("key")
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-18", utils.ErrFailedExtraction)
+	}
+	if err := mongo.AcceptOffer(postID, claims.GetEmail(), offerKey); err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}

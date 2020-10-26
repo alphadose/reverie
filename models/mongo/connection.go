@@ -1,7 +1,5 @@
 package mongo
 
-// db.getCollection('kekw').find({$or: [{ "looks.chu": { $gt: 0 } }, { "looks.meow": { $gt: 0 } }]})
-
 import (
 	"context"
 	"os"

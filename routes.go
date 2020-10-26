@@ -9,6 +9,9 @@ import (
 	m "github.com/reverie/middlewares"
 )
 
+// PART LEFT: NOTIFICATIONS, Tracking remaining  requirements, Payment, Emails, Managing Vendor Inventory
+// Request for increment/decrement of offer items to vendors
+
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
 		ErrorHandler: c.ErrorHandler,
@@ -27,7 +30,6 @@ func newRouter() *fiber.App {
 		auth.Post("/login", c.Login)
 		auth.Post("/register/client", c.RegisterClient)
 		auth.Post("/register/vendor", c.RegisterVendor)
-		// auth.Get("/refresh", m.JWT.RefreshHandler)
 	}
 
 	client := router.Group("/client", m.JWT, m.IsClient)
@@ -37,6 +39,9 @@ func newRouter() *fiber.App {
 		client.Get("/post", c.FetchActivePostsByClient)
 		client.Post("/post", c.CreatePost)
 		client.Put("/post/:id", c.UpdatePost)
+		// TODO: update vendor inventory after offer/  Debatable too constricting feature
+		client.Patch("/post/:id/offer/:key/accept", c.AcceptOffer)
+		// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
 		client.Patch("/post/:id/activate", c.ActivatePost)
 		client.Patch("/post/:id/deactivate", c.DeactivatePost)
 		// TODO: update vendor inventory after completion/ Debatable too constricting feature
@@ -50,9 +55,9 @@ func newRouter() *fiber.App {
 		vendor.Put("/inventory", c.UpdateInventory)
 		vendor.Put("/password", c.UpdatePassword)
 		vendor.Get("/post", c.FetchPostsByVendor)
-		// TODO: update vendor inventory after offer/  Debatable too constricting feature
-		vendor.Put("/post/:id", c.MakeOffer)
+		vendor.Put("/post/:id/offer", c.MakeOffer)
 		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
+		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)
 	}
 
 	router.Use(c.Handle404)

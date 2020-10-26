@@ -43,10 +43,17 @@ type Post struct {
 	Owner       string             `json:"owner,omitempty" bson:"owner"`
 	Description string             `json:"description" bson:"description" valid:"required"`
 	Location    Location           `json:"location" bson:"location" valid:"required"`
+
 	// Infrastructure required by the client
 	Requirements Inventory `json:"requirements" bson:"requirements" valid:"required"`
+
 	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
 	Offers map[string]Inventory `json:"offers,omitempty" bson:"offers,omitempty"`
+
+	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
+	// When offers are accepted by the client, they are moved here
+	AcceptedOffers map[string]Inventory `json:"accepted_offers,omitempty" bson:"accepted_offers,omitempty"`
+
 	// Status can be either OPEN, ONGOING, COMPLETED or DELETED
 	Status  string `json:"-" bson:"status"`
 	Created int64  `json:"created" bson:"created"`
@@ -55,6 +62,10 @@ type Post struct {
 
 // Initialize initializes the post parameters during its creation
 func (post *Post) Initialize() error {
+	// Default maps
+	post.Offers = make(map[string]Inventory)
+	post.AcceptedOffers = make(map[string]Inventory)
+
 	// Location
 	latitude, err := strconv.ParseFloat(post.Location.Latitude, 64)
 	if err != nil {
