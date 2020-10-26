@@ -102,6 +102,18 @@ func UpdatePostStatus(postID, clientEmail, newStatus string) error {
 	return updateOne(postCollection, filter, updatePayload)
 }
 
+// FetchPostsByVendor returns all open posts
+func FetchPostsByVendor(vendorEmail string, pageNumber int64) ([]types.M, error) {
+	return fetchDocs(postCollection, types.M{
+		postStatusKey: types.OPEN,
+	}, options.Find().SetSort(types.M{
+		updatedKey: 1,
+	}).SetSkip(PageSize*pageNumber).SetLimit(PageSize).SetProjection(types.M{
+		postOwnerKey:  0,
+		postOffersKey: 0,
+	}))
+}
+
 // FetchOfferedPostsByVendor returns all open/ongoing posts the vendor has made an offer to
 func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
 	return fetchDocs(postCollection, types.M{

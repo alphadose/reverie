@@ -42,7 +42,6 @@ func newRouter() *fiber.App {
 		// TODO: update vendor inventory after completion/ Debatable too constricting feature
 		// maybe reduce inventory on acceptance, seems right
 		client.Patch("/post/:id/complete", c.MarkComplete)
-
 	}
 
 	vendor := router.Group("/vendor", m.JWT, m.IsVendor)
@@ -50,9 +49,10 @@ func newRouter() *fiber.App {
 		vendor.Get("", c.GetLoggedInUserInfo)
 		vendor.Put("/inventory", c.UpdateInventory)
 		vendor.Put("/password", c.UpdatePassword)
+		vendor.Get("/post", c.FetchPostsByVendor)
 		// TODO: update vendor inventory after offer/  Debatable too constricting feature
 		vendor.Put("/post/:id", c.MakeOffer)
-		vendor.Get("/offeredposts", c.FetchOfferedPostsByVendor)
+		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
 	}
 
 	router.Use(c.Handle404)

@@ -40,7 +40,7 @@ func (loc Location) Empty() bool {
 // Post stores the information about a job request
 type Post struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Owner       string             `json:"owner" bson:"owner"`
+	Owner       string             `json:"owner,omitempty" bson:"owner"`
 	Description string             `json:"description" bson:"description" valid:"required"`
 	Location    Location           `json:"location" bson:"location" valid:"required"`
 	// Infrastructure required by the client
