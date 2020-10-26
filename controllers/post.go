@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"strconv"
+	"strings"
 
 	validator "github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
@@ -147,7 +148,7 @@ func FetchOfferedPostsByVendor(c *fiber.Ctx) error {
 	}
 	offeredPosts, err := mongo.FetchOfferedPostsByVendor(claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("Post-Controller14", err)
+		return utils.ServerError("Post-Controller-14", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -157,18 +158,18 @@ func FetchOfferedPostsByVendor(c *fiber.Ctx) error {
 
 // FetchPostsByVendor returns all open posts
 func FetchPostsByVendor(c *fiber.Ctx) error {
-	claims := utils.ExtractClaims(c)
-	if claims == nil {
-		return utils.ServerError("Post-Controller-15", utils.ErrFailedExtraction)
-	}
 	page := c.Query("page", "0")
 	pageNumber, err := strconv.ParseInt(page, 10, 64)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	openPosts, err := mongo.FetchPostsByVendor(claims.GetEmail(), pageNumber)
+	if pageNumber < 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "Page must be non-negative")
+	}
+	lookupItems := c.Query("items")
+	openPosts, err := mongo.FetchPostsByVendor(pageNumber, strings.Split(lookupItems, ","))
 	if err != nil {
-		return utils.ServerError("Post-Controller-16", err)
+		return utils.ServerError("Post-Controller-15", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,

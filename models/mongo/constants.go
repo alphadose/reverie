@@ -11,8 +11,8 @@ const (
 	// primaryKey is the primary key for mongoDB documents
 	primaryKey = "_id"
 
-	// PageSize is the number of documents retrieved in one pull for the vendor
-	PageSize = 30
+	// pageSize is the number of documents retrieved in one pull for the vendor
+	pageSize = 30
 
 	// timeout is the context timeout for generic operations
 	timeout = 5
