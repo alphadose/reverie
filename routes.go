@@ -34,6 +34,7 @@ func newRouter() *fiber.App {
 	{
 		client.Get("", c.GetLoggedInUserInfo)
 		client.Put("/password", c.UpdatePassword)
+		client.Get("/post", c.FetchActivePostsByClient)
 		client.Post("/post", c.CreatePost)
 	}
 
@@ -42,6 +43,7 @@ func newRouter() *fiber.App {
 		vendor.Get("", c.GetLoggedInUserInfo)
 		vendor.Put("/inventory", c.UpdateInventory)
 		vendor.Put("/password", c.UpdatePassword)
+		vendor.Put("/post/:id", c.MakeOffer)
 	}
 
 	router.Use(c.Handle404)

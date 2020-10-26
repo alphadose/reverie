@@ -34,12 +34,12 @@ var userCollection = db.Collection(userCollectionKey)
 // UpsertUser is an abstraction over UpdateOne which updates a user
 // or inserts it if the corresponding document doesn't exist
 func UpsertUser(filter types.M, user *types.User) error {
-	return UpdateOne(userCollection, filter, user, options.FindOneAndUpdate().SetUpsert(true))
+	return updateOne(userCollection, filter, user, options.FindOneAndUpdate().SetUpsert(true))
 }
 
 // UpdateUser is an abstraction over UpdateOne which updates a user
 func UpdateUser(filter types.M, data interface{}) error {
-	return UpdateOne(userCollection, filter, data, nil)
+	return updateOne(userCollection, filter, data, nil)
 }
 
 // UpdateVendorInventory is an abstraction over UpdateOne which updates the vendor's inventory
@@ -50,7 +50,7 @@ func UpdateVendorInventory(email string, inventory *types.Inventory) error {
 	updatePayload := types.M{
 		userInventoryKey: inventory,
 	}
-	return UpdateOne(userCollection, filter, updatePayload, nil)
+	return updateOne(userCollection, filter, updatePayload, nil)
 }
 
 // UpdatePassword is an abstraction over UpdateOne which updates a user's password
@@ -61,12 +61,12 @@ func UpdatePassword(email, newHashedPassword string) error {
 	updatePayload := types.M{
 		userPasswordKey: newHashedPassword,
 	}
-	return UpdateOne(userCollection, filter, updatePayload, nil)
+	return updateOne(userCollection, filter, updatePayload, nil)
 }
 
 // RegisterUser is an abstraction over InsertOne which inserts user into the mongoDB
 func RegisterUser(user *types.User) (interface{}, error) {
-	return InsertOne(userCollection, user)
+	return insertOne(userCollection, user)
 }
 
 // FetchSingleUser returns a user based on a email based filter
@@ -90,7 +90,7 @@ func FetchSingleUserWithoutPassword(email string) (*types.User, error) {
 
 // IsUniqueEmail checks if an email id is unique or not
 func IsUniqueEmail(email string) (bool, error) {
-	count, err := CountDocs(userCollection, types.M{userEmailKey: email})
+	count, err := countDocs(userCollection, types.M{userEmailKey: email})
 	if err != nil {
 		return false, err
 	}

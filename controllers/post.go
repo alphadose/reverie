@@ -35,3 +35,39 @@ func CreatePost(c *fiber.Ctx) error {
 		types.Success: true,
 	})
 }
+
+// FetchActivePostsByClient returns all open/ongoing posts created by a client
+func FetchActivePostsByClient(c *fiber.Ctx) error {
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-4", utils.ErrFailedExtraction)
+	}
+	activePosts, err := mongo.FetchActivePostsByClient(claims.GetEmail())
+	if err != nil {
+		return utils.ServerError("Post-Controller-5", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+		"data":        activePosts,
+	})
+}
+
+// MakeOffer adds/updates a vendor's offer to a post
+func MakeOffer(c *fiber.Ctx) error {
+	postID := c.Params("id")
+	offer := &types.Inventory{}
+	if err := c.BodyParser(offer); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction)
+	}
+	if err := mongo.UpdatePostOffers(postID, claims.GetEmail(), offer); err != nil {
+		return utils.ServerError("Post-Controller-7", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}

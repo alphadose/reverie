@@ -41,7 +41,7 @@ func processEmail(email string) string {
 
 // CreatePost is an abstraction over InsertOne which inserts a post
 func CreatePost(post *types.Post) (interface{}, error) {
-	return InsertOne(postCollection, post)
+	return insertOne(postCollection, post)
 }
 
 // UpdatePostOffers adds/updates an offer to a post
@@ -56,12 +56,12 @@ func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error 
 	updatePayload := types.M{
 		fmt.Sprintf("%s.%s", postRequirementsKey, processEmail(vendorEmail)): offer,
 	}
-	return UpdateOne(postCollection, filter, updatePayload, options.FindOneAndUpdate().SetUpsert(true))
+	return updateOne(postCollection, filter, updatePayload, options.FindOneAndUpdate().SetUpsert(true))
 }
 
 // FetchActivePostsByClient returns all open/ongoing posts created by a client
 func FetchActivePostsByClient(email string) ([]types.M, error) {
-	return FetchDocs(postCollection, types.M{
+	return fetchDocs(postCollection, types.M{
 		postOwnerKey: email,
 		"$or": []types.M{
 			{postStatusKey: types.OPEN},
