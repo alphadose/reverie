@@ -16,6 +16,9 @@ const (
 	// postRequirementsKey is the key denoting the requirements for a post
 	postRequirementsKey = "requirements"
 
+	// postOffersKey is the key denoting the offers made to a post by a vendor
+	postOffersKey = "offers"
+
 	// postLocationKey is the key denoting the location of a job request
 	postLocationKey = "location"
 
@@ -67,7 +70,7 @@ func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error 
 		primaryKey: docID,
 	}
 	updatePayload := types.M{
-		fmt.Sprintf("%s.%s", postRequirementsKey, processEmail(vendorEmail)): offer,
+		fmt.Sprintf("%s.%s", postOffersKey, processEmail(vendorEmail)): offer,
 	}
 	return updateOne(postCollection, filter, updatePayload, options.FindOneAndUpdate().SetUpsert(true))
 }
@@ -97,4 +100,14 @@ func UpdatePostStatus(postID, clientEmail, newStatus string) error {
 		postStatusKey: newStatus,
 	}
 	return updateOne(postCollection, filter, updatePayload)
+}
+
+// FetchOfferedPostsByVendor returns all open/ongoing posts the vendor has made an offer to
+func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
+	return fetchDocs(postCollection, types.M{
+		postStatusKey: types.OPEN,
+		fmt.Sprintf("%s.%s", postOffersKey, processEmail(vendorEmail)): types.M{
+			"$exists": true,
+		},
+	})
 }

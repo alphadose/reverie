@@ -136,3 +136,19 @@ func UpdatePost(c *fiber.Ctx) error {
 		types.Success: true,
 	})
 }
+
+// FetchOfferedPostsByVendor returns all open/ongoing posts the vendor has made an offer to
+func FetchOfferedPostsByVendor(c *fiber.Ctx) error {
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction)
+	}
+	offeredPosts, err := mongo.FetchOfferedPostsByVendor(claims.GetEmail())
+	if err != nil {
+		return utils.ServerError("Post-Controller14", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+		"data":        offeredPosts,
+	})
+}
