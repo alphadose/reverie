@@ -42,26 +42,6 @@ const (
 
 var postCollection = db.Collection(postCollectionKey)
 
-// inventoryCheckSet holds the correct inventory items
-// used for detecting commodities which are not a part of our system ex:- space shuttles :3
-var inventoryCheckSet *types.Set
-
-// Initialize the set
-func init() {
-	inventoryCheckSet = types.NewSet()
-
-	// TODO: Keep adding new elements as long as our infrastructure expands
-	inventoryCheckSet.Add("Truck")
-	inventoryCheckSet.Add("Crane")
-	inventoryCheckSet.Add("Tanker")
-	inventoryCheckSet.Add("RoadRoller")
-	inventoryCheckSet.Add("ForkLift")
-	inventoryCheckSet.Add("BoomLifter")
-	inventoryCheckSet.Add("ManLifter")
-	inventoryCheckSet.Add("HydraulicJack")
-	inventoryCheckSet.Add("Manpower")
-}
-
 // convert "." to "_" for storing in mongoDB
 func processEmail(email string) string {
 	return strings.ReplaceAll(email, ".", "_")
@@ -133,12 +113,9 @@ func UpdatePostStatus(postID, clientEmail, newStatus string) error {
 
 // FetchPostsByVendor returns all open posts based on the vendor's inventory
 // TODO: be sure to add to projections on addition of sensitive fields to posts
-func FetchPostsByVendor(pageNumber int64, lookupItems []string) ([]types.M, error) {
+func FetchPostsByVendor(vendorEmail string, pageNumber int64, lookupItems []string) ([]types.M, error) {
 	searchArray := make([]types.M, 0)
 	for _, item := range lookupItems {
-		if !inventoryCheckSet.Contains(item) {
-			continue
-		}
 		searchArray = append(searchArray, types.M{
 			concat(postRequirementsKey, item): types.M{
 				"$gt": 0,
@@ -148,6 +125,12 @@ func FetchPostsByVendor(pageNumber int64, lookupItems []string) ([]types.M, erro
 	return fetchDocs(postCollection, types.M{
 		postStatusKey: types.OPEN,
 		"$or":         searchArray,
+		concat(postOffersKey, processEmail(vendorEmail)): types.M{
+			"$exists": false,
+		},
+		concat(postAcceptedOffersKey, processEmail(vendorEmail)): types.M{
+			"$exists": false,
+		},
 	}, options.Find().SetSort(types.M{
 		updatedKey: 1,
 	}).SetSkip(pageSize*pageNumber).SetLimit(pageSize).SetProjection(types.M{

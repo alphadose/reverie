@@ -41,6 +41,7 @@ func (loc Location) Empty() bool {
 type Post struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Owner       string             `json:"owner,omitempty" bson:"owner"`
+	Name        string             `json:"name" bson:"name" valid:"required,stringlength(5|100)~Field 'name' should have length between 5 to 100 characters"`
 	Description string             `json:"description" bson:"description" valid:"required"`
 	Location    Location           `json:"location" bson:"location" valid:"required"`
 

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -156,8 +158,23 @@ func FetchOfferedPostsByVendor(c *fiber.Ctx) error {
 	})
 }
 
+// inventoryCheckSet holds the correct inventory items
+// used for detecting commodities which are not a part of our system ex:- space shuttles :3
+var inventoryCheckSet *types.Set
+
+// Initialize the set
+func init() {
+	inventoryCheckSet = types.NewSet()
+	equipments := reflect.TypeOf(types.Inventory{})
+	num := equipments.NumField()
+	for i := 0; i < num; i++ {
+		inventoryCheckSet.Add(equipments.Field(i).Name)
+	}
+}
+
 // FetchPostsByVendor returns all open posts
 func FetchPostsByVendor(c *fiber.Ctx) error {
+	// Extract page number for pagination and validate
 	page := c.Query("page", "0")
 	pageNumber, err := strconv.ParseInt(page, 10, 64)
 	if err != nil {
@@ -166,8 +183,20 @@ func FetchPostsByVendor(c *fiber.Ctx) error {
 	if pageNumber < 0 {
 		return fiber.NewError(fiber.StatusBadRequest, "Page must be non-negative")
 	}
-	lookupItems := c.Query("items")
-	openPosts, err := mongo.FetchPostsByVendor(pageNumber, strings.Split(lookupItems, ","))
+
+	// Extract lookup items and validate
+	lookupItems := strings.Split(c.Query("items"), ",")
+	for _, item := range lookupItems {
+		if !inventoryCheckSet.Contains(item) {
+			return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("%s is an invalid lookup item", item))
+		}
+	}
+
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction)
+	}
+	openPosts, err := mongo.FetchPostsByVendor(claims.GetEmail(), pageNumber, lookupItems)
 	if err != nil {
 		return utils.ServerError("Post-Controller-15", err)
 	}
