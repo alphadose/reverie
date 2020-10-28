@@ -59,10 +59,28 @@ func FetchActivePostsByClient(c *fiber.Ctx) error {
 
 // MakeOffer adds/updates a vendor's offer to a post
 func MakeOffer(c *fiber.Ctx) error {
-	postID := c.Params("id")
 	offer := &types.Inventory{}
 	if err := c.BodyParser(offer); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	postID := c.Params("id")
+	requirements, err := mongo.FetchPostRequirements(postID)
+	if err != nil {
+		return utils.ServerError("Post-Controller", err)
+	}
+
+	// Validate the offer made by the vendor
+	offerValues := reflect.ValueOf(*offer)
+	requirementValues := reflect.ValueOf(*requirements)
+	for i := 0; i < offerValues.NumField(); i++ {
+		offerVal := offerValues.Field(i).Int()
+		reqVal := requirementValues.Field(i).Int()
+		// Check if fields in the offer are negative or they exceed the post's requirements
+		// If yes then return an error
+		if offerVal < 0 || offerVal > reqVal {
+			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the post's requirements or are negative")
+		}
 	}
 
 	claims := utils.ExtractClaims(c)

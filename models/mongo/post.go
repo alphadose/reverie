@@ -178,6 +178,22 @@ func fetchPostOffers(docID primitive.ObjectID, clientEmail string) (map[string]t
 	return post.Offers, err
 }
 
+// FetchPostRequirements returns the requirements of a post
+func FetchPostRequirements(postID string) (*types.Inventory, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	post := &types.Post{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{postRequirementsKey: 1})).Decode(post)
+	return &post.Requirements, err
+}
+
 // AcceptOffer accepts an offer made by a vendor on a post
 // This operation is invoked by the client who is the owner of the post
 // The param "offerKey" is key of the post holding the offer

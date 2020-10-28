@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/reverie/configs"
 	c "github.com/reverie/controllers"
 	m "github.com/reverie/middlewares"
 )
@@ -21,7 +22,7 @@ import (
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
 		ErrorHandler: c.ErrorHandler,
-		Prefork:      true,
+		Prefork:      !configs.Project.Debug,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	})
