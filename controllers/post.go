@@ -64,8 +64,18 @@ func MakeOffer(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction)
+	}
+
 	postID := c.Params("id")
 	requirements, err := mongo.FetchPostRequirements(postID)
+	if err != nil {
+		return utils.ServerError("Post-Controller", err)
+	}
+
+	vendorInventory, err := mongo.FetchVendorInventory(claims.GetEmail())
 	if err != nil {
 		return utils.ServerError("Post-Controller", err)
 	}
@@ -73,20 +83,27 @@ func MakeOffer(c *fiber.Ctx) error {
 	// Validate the offer made by the vendor
 	offerValues := reflect.ValueOf(*offer)
 	requirementValues := reflect.ValueOf(*requirements)
+	vendorInventoryValues := reflect.ValueOf(*vendorInventory)
+
 	for i := 0; i < offerValues.NumField(); i++ {
 		offerVal := offerValues.Field(i).Int()
 		reqVal := requirementValues.Field(i).Int()
+		vendorInvVal := vendorInventoryValues.Field(i).Int()
+
 		// Check if fields in the offer are negative or they exceed the post's requirements
+		// or they exceed the vendor's inventory
 		// If yes then return an error
-		if offerVal < 0 || offerVal > reqVal {
-			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the post's requirements or are negative")
+		if offerVal < 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "Offer values are negative")
+		}
+		if offerVal > reqVal {
+			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the post's requirements")
+		}
+		if offerVal > vendorInvVal {
+			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the vendor's current inventory limits")
 		}
 	}
 
-	claims := utils.ExtractClaims(c)
-	if claims == nil {
-		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction)
-	}
 	if err := mongo.UpdatePostOffers(postID, claims.GetEmail(), offer); err != nil {
 		return utils.ServerError("Post-Controller-7", err)
 	}

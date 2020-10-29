@@ -2,7 +2,9 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -166,7 +168,7 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 	}))
 }
 
-func fetchPostOffers(docID primitive.ObjectID, clientEmail string) (map[string]types.Inventory, error) {
+func fetchPostOffersAndRequirements(docID primitive.ObjectID, clientEmail string) (map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
@@ -174,8 +176,11 @@ func fetchPostOffers(docID primitive.ObjectID, clientEmail string) (map[string]t
 	err := postCollection.FindOne(ctx, types.M{
 		primaryKey:   docID,
 		postOwnerKey: clientEmail,
-	}, options.FindOne().SetProjection(types.M{postOffersKey: 1})).Decode(post)
-	return post.Offers, err
+	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postAcceptedOffersKey: 1, postRequirementsKey: 1})).Decode(post)
+	if err != nil {
+		return nil, nil, types.Inventory{}, err
+	}
+	return post.Offers, post.AcceptedOffers, post.Requirements, nil
 }
 
 // FetchPostRequirements returns the requirements of a post
@@ -191,7 +196,10 @@ func FetchPostRequirements(postID string) (*types.Inventory, error) {
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
 	}, options.FindOne().SetProjection(types.M{postRequirementsKey: 1})).Decode(post)
-	return &post.Requirements, err
+	if err != nil {
+		return nil, err
+	}
+	return &post.Requirements, nil
 }
 
 // AcceptOffer accepts an offer made by a vendor on a post
@@ -208,14 +216,50 @@ func AcceptOffer(postID, clientEmail, offerKey string) error {
 		primaryKey:   docID,
 		postOwnerKey: clientEmail,
 	}
-	offers, err := fetchPostOffers(docID, clientEmail)
+
+	offers, acceptedOffers, requirements, err := fetchPostOffersAndRequirements(docID, clientEmail)
 	if err != nil {
 		return err
 	}
-	offerContent, ok := offers[offerKey]
+
+	// Check if offer exists
+	offer, ok := offers[offerKey]
 	if !ok {
 		return fmt.Errorf("Offer key %s doesnt exist in post %s for client %s", offerKey, postID, clientEmail)
 	}
+
+	vendorInventory, err := FetchVendorInventory(strings.ReplaceAll(offerKey, "_", "."))
+	if err != nil {
+		return err
+	}
+
+	// Check if offer exceeds post requirements or vendor's current inventory
+	offerValues := reflect.ValueOf(offer)
+	requirementValues := reflect.ValueOf(requirements)
+	vendorInventoryValues := reflect.ValueOf(*vendorInventory)
+
+	sanityChecker := make([]int64, offerValues.NumField())
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		if offerValues.Field(i).Int() > vendorInventoryValues.Field(i).Int() {
+			return errors.New("Offer values exceed the vendor's current inventory limits")
+		}
+		sanityChecker[i] = requirementValues.Field(i).Int() - offerValues.Field(i).Int()
+	}
+
+	for _, acceptedOffer := range acceptedOffers {
+		acceptedOfferValues := reflect.ValueOf(acceptedOffer)
+		for i := 0; i < offerValues.NumField(); i++ {
+			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
+		}
+	}
+
+	for _, check := range sanityChecker {
+		if check < 0 {
+			return errors.New("Offer values exceed the post's requirements")
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
@@ -223,7 +267,7 @@ func AcceptOffer(postID, clientEmail, offerKey string) error {
 			concat(postOffersKey, offerKey): "",
 		},
 		"$set": types.M{
-			concat(postAcceptedOffersKey, offerKey): offerContent,
+			concat(postAcceptedOffersKey, offerKey): offer,
 		},
 	}).Err()
 }

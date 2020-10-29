@@ -79,6 +79,21 @@ func FetchSingleUser(email string, opts ...*options.FindOneOptions) (*types.User
 	return user, err
 }
 
+// FetchVendorInventory returns the inventory of a vendor
+func FetchVendorInventory(vendorEmail string) (*types.Inventory, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	user := &types.User{}
+	err := userCollection.FindOne(ctx, types.M{
+		userEmailKey: vendorEmail,
+	}, options.FindOne().SetProjection(types.M{userInventoryKey: 1})).Decode(user)
+	if err != nil {
+		return nil, err
+	}
+	return &user.Inventory, nil
+}
+
 // FetchSingleUserWithoutPassword returns a user based on a email based filter without his/her password
 func FetchSingleUserWithoutPassword(email string) (*types.User, error) {
 	return FetchSingleUser(

@@ -13,11 +13,10 @@ import (
 // PART LEFT: NOTIFICATIONS, Tracking remaining requirements, Payment, Emails, Managing Vendor Inventory
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Cookie Auth?
-// Validation when vendor makes offer to a post (Negative value check and check for fields not present in the post requirements itself but present in the offer)
-// also check if the offer exceeds the post requirements itself
 
-// Validate subtraction both times i.e MakeOffer and AcceptOffer
-// Test Make offers route and see if it replaces the json completely
+// Test Make offers route and see if it replaces the json completely (use robo3t)
+// update vendor inventory after accept offer (decrease) and job completion (increase)
+// update post timestamp
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
@@ -60,7 +59,7 @@ func newRouter() *fiber.App {
 	vendor := router.Group("/vendor", m.JWT, m.IsVendor)
 	{
 		vendor.Get("", c.GetLoggedInUserInfo)
-		vendor.Put("/inventory", c.UpdateInventory)
+		vendor.Put("/inventory", c.UpdateInventory) // Restrict this, should only happen on our authorization
 		vendor.Put("/password", c.UpdatePassword)
 		vendor.Get("/post", c.FetchPostsByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
