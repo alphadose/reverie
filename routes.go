@@ -44,16 +44,20 @@ func newRouter() *fiber.App {
 		client.Put("/password", c.UpdatePassword)
 		client.Get("/post", c.FetchActivePostsByClient)
 		client.Post("/post", c.CreatePost)
-		client.Put("/post/:id", c.UpdatePost)
-		// TODO: update vendor inventory after offer/  Debatable too constricting feature
-		client.Patch("/post/:id/offer/:key/accept", c.AcceptOffer)
-		// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
-		client.Patch("/post/:id/activate", c.ActivatePost)
-		client.Patch("/post/:id/deactivate", c.DeactivatePost)
-		// TODO: update vendor inventory after completion/ Debatable too constricting feature
-		// maybe reduce inventory on acceptance, seems right
-		// TODO: make clients/vendors fill a survey after completion?
-		client.Patch("/post/:id/complete", c.MarkComplete)
+
+		client.Use(m.IsPostOwner)
+		{
+			client.Put("/post/:id", c.UpdatePost)
+			// TODO: update vendor inventory after offer/  Debatable too constricting feature
+			client.Patch("/post/:id/offer/:key/accept", c.AcceptOffer)
+			// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
+			client.Patch("/post/:id/activate", c.ActivatePost)
+			client.Patch("/post/:id/deactivate", c.DeactivatePost)
+			// TODO: update vendor inventory after completion/ Debatable too constricting feature
+			// maybe reduce inventory on acceptance, seems right
+			// TODO: make clients/vendors fill a survey after completion?
+			client.Patch("/post/:id/complete", c.MarkComplete)
+		}
 	}
 
 	vendor := router.Group("/vendor", m.JWT, m.IsVendor)

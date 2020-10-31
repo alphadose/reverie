@@ -57,15 +57,30 @@ func CreatePost(post *types.Post) (interface{}, error) {
 	return insertOne(postCollection, post)
 }
 
+// IsPostOwner checks if a client is the owner of a post or not
+func IsPostOwner(postID, clientEmail string) (bool, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return false, err
+	}
+	count, err := countDocs(postCollection, types.M{
+		postOwnerKey: clientEmail,
+		primaryKey:   docID,
+	})
+	if err != nil {
+		return false, err
+	}
+	return count == 1, nil
+}
+
 // UpdatePost updates a post by a client
-func UpdatePost(postID, clientEmail string, post *types.PostUpdate) error {
+func UpdatePost(postID string, post *types.PostUpdate) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
 	}
 	filter := types.M{
-		primaryKey:   docID,
-		postOwnerKey: clientEmail,
+		primaryKey: docID,
 	}
 	return updateOne(postCollection, filter, post)
 }
@@ -96,14 +111,13 @@ func FetchActivePostsByClient(email string) ([]types.M, error) {
 }
 
 // UpdatePostStatus updates the status of the post
-func UpdatePostStatus(postID, clientEmail, newStatus string) error {
+func UpdatePostStatus(postID, newStatus string) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
 	}
 	filter := types.M{
-		primaryKey:   docID,
-		postOwnerKey: clientEmail,
+		primaryKey: docID,
 	}
 	updatePayload := types.M{
 		postStatusKey: newStatus,
@@ -168,7 +182,7 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 }
 
 // FetchPostOffersAndRequirements returns a post's offers (both accepted and pending) and requirements
-func FetchPostOffersAndRequirements(postID, clientEmail string) (map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
+func FetchPostOffersAndRequirements(postID string) (map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return nil, nil, types.Inventory{}, err
@@ -179,8 +193,7 @@ func FetchPostOffersAndRequirements(postID, clientEmail string) (map[string]type
 
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
-		primaryKey:   docID,
-		postOwnerKey: clientEmail,
+		primaryKey: docID,
 	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postAcceptedOffersKey: 1, postRequirementsKey: 1})).Decode(post)
 	if err != nil {
 		return nil, nil, types.Inventory{}, err
@@ -207,20 +220,38 @@ func FetchPostRequirements(postID string) (*types.Inventory, error) {
 	return &post.Requirements, nil
 }
 
+// FetchPostAcceptedOffers returns the accepted offers of a post
+func FetchPostAcceptedOffers(postID string) (map[string]types.Inventory, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	post := &types.Post{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{postAcceptedOffersKey: 1})).Decode(post)
+	if err != nil {
+		return nil, err
+	}
+	return post.AcceptedOffers, nil
+}
+
 // AcceptOffer accepts an offer made by a vendor on a post
 // This operation is invoked by the client who is the owner of the post
 // The param "offerKey" is key of the post holding the offer
 // It is in the form of the vendor's email who made the offer with all "." replaced with "_"
 // For Ex:- If the vendor's email is abc.2000@xyz.com the the key will be abc_2000@xyz_com
-func AcceptOffer(postID, clientEmail, offerKey string, offer types.Inventory) error {
+func AcceptOffer(postID, offerKey string, offer types.Inventory) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
 	}
 
 	filter := types.M{
-		primaryKey:   docID,
-		postOwnerKey: clientEmail,
+		primaryKey: docID,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)

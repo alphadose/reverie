@@ -119,7 +119,7 @@ func updatePostStatus(c *fiber.Ctx, status string) error {
 	if claims == nil {
 		return utils.ServerError("Post-Controller-8", utils.ErrFailedExtraction)
 	}
-	if err := mongo.UpdatePostStatus(postID, claims.GetEmail(), status); err != nil {
+	if err := mongo.UpdatePostStatus(postID, status); err != nil {
 		return utils.ServerError("Post-Controller-9", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
@@ -144,7 +144,9 @@ func DeactivatePost(c *fiber.Ctx) error {
 // Denotes the end of a job request
 func MarkComplete(c *fiber.Ctx) error {
 	// TODO : release all vendor inventories from accepted offers
+	// postID := c.Params("id")
 
+	// acceptedOffers, err := mongo.FetchPostAcceptedOffers(postID)
 	return updatePostStatus(c, types.COMPLETED)
 }
 
@@ -166,14 +168,10 @@ func UpdatePost(c *fiber.Ctx) error {
 	}
 
 	postID := c.Params("id")
-	claims := utils.ExtractClaims(c)
-	if claims == nil {
-		return utils.ServerError("Post-Controller-11", utils.ErrFailedExtraction)
-	}
-
-	if err := mongo.UpdatePost(postID, claims.GetEmail(), postUpdate); err != nil {
+	if err := mongo.UpdatePost(postID, postUpdate); err != nil {
 		return utils.ServerError("Post-Controller-12", err)
 	}
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})
@@ -268,12 +266,8 @@ func FetchContractedPostsByVendor(c *fiber.Ctx) error {
 func AcceptOffer(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	offerKey := c.Params("key")
-	claims := utils.ExtractClaims(c)
-	if claims == nil {
-		return utils.ServerError("Post-Controller-18", utils.ErrFailedExtraction)
-	}
 
-	offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirements(postID, claims.GetEmail())
+	offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirements(postID)
 	if err != nil {
 		return utils.ServerError("Post-Controller-18", err)
 	}
@@ -281,7 +275,7 @@ func AcceptOffer(c *fiber.Ctx) error {
 	// Check if offer exists
 	offer, ok := offers[offerKey]
 	if !ok {
-		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Offer key %s doesnt exist in post %s for client %s", offerKey, postID, claims.GetEmail()))
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Offer key %s doesnt exist in post %s", offerKey, postID))
 	}
 
 	vendorEmail := strings.ReplaceAll(offerKey, "_", ".")
@@ -317,7 +311,7 @@ func AcceptOffer(c *fiber.Ctx) error {
 		}
 	}
 
-	if err := mongo.AcceptOffer(postID, claims.GetEmail(), offerKey, offer); err != nil {
+	if err := mongo.AcceptOffer(postID, offerKey, offer); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 
