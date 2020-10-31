@@ -270,7 +270,51 @@ func AcceptOffer(c *fiber.Ctx) error {
 	if claims == nil {
 		return utils.ServerError("Post-Controller-18", utils.ErrFailedExtraction)
 	}
-	if err := mongo.AcceptOffer(postID, claims.GetEmail(), offerKey); err != nil {
+
+	offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirements(postID, claims.GetEmail())
+	if err != nil {
+		return utils.ServerError("Post-Controller-18", err)
+	}
+
+	// Check if offer exists
+	offer, ok := offers[offerKey]
+	if !ok {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Offer key %s doesnt exist in post %s for client %s", offerKey, postID, claims.GetEmail()))
+	}
+
+	vendorInventory, err := mongo.FetchVendorInventory(strings.ReplaceAll(offerKey, "_", "."))
+	if err != nil {
+		return utils.ServerError("Post-Controller-18", err)
+	}
+
+	// Check if offer exceeds post requirements or vendor's current inventory
+	offerValues := reflect.ValueOf(offer)
+	requirementValues := reflect.ValueOf(requirements)
+	vendorInventoryValues := reflect.ValueOf(*vendorInventory)
+
+	sanityChecker := make([]int64, offerValues.NumField())
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		if offerValues.Field(i).Int() > vendorInventoryValues.Field(i).Int() {
+			fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the vendor's current inventory limits")
+		}
+		sanityChecker[i] = requirementValues.Field(i).Int() - offerValues.Field(i).Int()
+	}
+
+	for _, acceptedOffer := range acceptedOffers {
+		acceptedOfferValues := reflect.ValueOf(acceptedOffer)
+		for i := 0; i < offerValues.NumField(); i++ {
+			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
+		}
+	}
+
+	for _, check := range sanityChecker {
+		if check < 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the post's requirements")
+		}
+	}
+
+	if err := mongo.AcceptOffer(postID, claims.GetEmail(), offerKey, offer); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{

@@ -2,9 +2,7 @@ package mongo
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -150,7 +148,8 @@ func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
 			"$exists": true,
 		},
 	}, options.Find().SetProjection(types.M{
-		postOwnerKey: 0,
+		postOwnerKey:          0,
+		postAcceptedOffersKey: 0,
 	}))
 }
 
@@ -168,12 +167,18 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 	}))
 }
 
-func fetchPostOffersAndRequirements(docID primitive.ObjectID, clientEmail string) (map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
+// FetchPostOffersAndRequirements returns a post's offers (both accepted and pending) and requirements
+func FetchPostOffersAndRequirements(postID, clientEmail string) (map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, nil, types.Inventory{}, err
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
 	post := &types.Post{}
-	err := postCollection.FindOne(ctx, types.M{
+	err = postCollection.FindOne(ctx, types.M{
 		primaryKey:   docID,
 		postOwnerKey: clientEmail,
 	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postAcceptedOffersKey: 1, postRequirementsKey: 1})).Decode(post)
@@ -207,57 +212,15 @@ func FetchPostRequirements(postID string) (*types.Inventory, error) {
 // The param "offerKey" is key of the post holding the offer
 // It is in the form of the vendor's email who made the offer with all "." replaced with "_"
 // For Ex:- If the vendor's email is abc.2000@xyz.com the the key will be abc_2000@xyz_com
-func AcceptOffer(postID, clientEmail, offerKey string) error {
+func AcceptOffer(postID, clientEmail, offerKey string, offer types.Inventory) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
 	}
+
 	filter := types.M{
 		primaryKey:   docID,
 		postOwnerKey: clientEmail,
-	}
-
-	offers, acceptedOffers, requirements, err := fetchPostOffersAndRequirements(docID, clientEmail)
-	if err != nil {
-		return err
-	}
-
-	// Check if offer exists
-	offer, ok := offers[offerKey]
-	if !ok {
-		return fmt.Errorf("Offer key %s doesnt exist in post %s for client %s", offerKey, postID, clientEmail)
-	}
-
-	vendorInventory, err := FetchVendorInventory(strings.ReplaceAll(offerKey, "_", "."))
-	if err != nil {
-		return err
-	}
-
-	// Check if offer exceeds post requirements or vendor's current inventory
-	offerValues := reflect.ValueOf(offer)
-	requirementValues := reflect.ValueOf(requirements)
-	vendorInventoryValues := reflect.ValueOf(*vendorInventory)
-
-	sanityChecker := make([]int64, offerValues.NumField())
-
-	for i := 0; i < offerValues.NumField(); i++ {
-		if offerValues.Field(i).Int() > vendorInventoryValues.Field(i).Int() {
-			return errors.New("Offer values exceed the vendor's current inventory limits")
-		}
-		sanityChecker[i] = requirementValues.Field(i).Int() - offerValues.Field(i).Int()
-	}
-
-	for _, acceptedOffer := range acceptedOffers {
-		acceptedOfferValues := reflect.ValueOf(acceptedOffer)
-		for i := 0; i < offerValues.NumField(); i++ {
-			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
-		}
-	}
-
-	for _, check := range sanityChecker {
-		if check < 0 {
-			return errors.New("Offer values exceed the post's requirements")
-		}
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
