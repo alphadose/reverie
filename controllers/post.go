@@ -115,10 +115,6 @@ func MakeOffer(c *fiber.Ctx) error {
 // updatePostStatus updates the status of a post
 func updatePostStatus(c *fiber.Ctx, status string) error {
 	postID := c.Params("id")
-	claims := utils.ExtractClaims(c)
-	if claims == nil {
-		return utils.ServerError("Post-Controller-8", utils.ErrFailedExtraction)
-	}
 	if err := mongo.UpdatePostStatus(postID, status); err != nil {
 		return utils.ServerError("Post-Controller-9", err)
 	}
@@ -143,10 +139,15 @@ func DeactivatePost(c *fiber.Ctx) error {
 // MarkComplete marks the status of the post as "COMPLETED"
 // Denotes the end of a job request
 func MarkComplete(c *fiber.Ctx) error {
-	// TODO : release all vendor inventories from accepted offers
-	// postID := c.Params("id")
+	postID := c.Params("id")
+	acceptedOffers, err := mongo.FetchPostAcceptedOffers(postID)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
 
-	// acceptedOffers, err := mongo.FetchPostAcceptedOffers(postID)
+	if err := mongo.ReleaseVendorInventories(acceptedOffers); err != nil {
+		return utils.ServerError("kekw", err)
+	}
 	return updatePostStatus(c, types.COMPLETED)
 }
 

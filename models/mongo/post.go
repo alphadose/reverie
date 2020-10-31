@@ -101,9 +101,9 @@ func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error 
 }
 
 // FetchActivePostsByClient returns all open/ongoing posts created by a client
-func FetchActivePostsByClient(email string) ([]types.M, error) {
+func FetchActivePostsByClient(clientEmail string) ([]types.M, error) {
 	return fetchDocs(postCollection, types.M{
-		postOwnerKey: email,
+		postOwnerKey: clientEmail,
 		postStatusKey: types.M{
 			"$in": []string{types.OPEN, types.ONGOING},
 		},

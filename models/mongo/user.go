@@ -3,9 +3,12 @@ package mongo
 import (
 	"context"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/reverie/types"
+	"github.com/reverie/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -63,7 +66,7 @@ func UpdateVendorInventoryOnAcceptance(vendorEmail string, offer types.Inventory
 	}
 
 	// Make a map for decrementing the vendor's inventory
-	decrementMap := make(types.M)
+	decrementMap := make(map[string]int64)
 
 	offerValues := reflect.ValueOf(offer)
 	offerKeys := reflect.TypeOf(offer)
@@ -78,6 +81,45 @@ func UpdateVendorInventoryOnAcceptance(vendorEmail string, offer types.Inventory
 	return userCollection.FindOneAndUpdate(ctx, filter, types.M{
 		"$inc": decrementMap,
 	}).Err()
+}
+
+// ReleaseVendorInventories releases inventories of all vendors bound to a job after it is marked as COMPLETED by the client
+// This set of inventory is then added back to their respective vendor's inventory pool
+func ReleaseVendorInventories(acceptedOffers map[string]types.Inventory) error {
+	updates := make([]mongo.WriteModel, 0)
+
+	for emailKey, offer := range acceptedOffers {
+		vendorEmail := strings.ReplaceAll(emailKey, "_", ".")
+
+		// Make a map for incrementing the vendor's inventory
+		incrementMap := make(map[string]int64)
+
+		offerValues := reflect.ValueOf(offer)
+		offerKeys := reflect.TypeOf(offer)
+
+		for i := 0; i < offerValues.NumField(); i++ {
+			incrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int()
+		}
+
+		operation := mongo.NewUpdateOneModel()
+		operation.SetFilter(types.M{
+			userEmailKey: vendorEmail,
+		})
+		operation.SetUpdate(types.M{
+			"$inc": incrementMap,
+		})
+
+		updates = append(updates, operation)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	result, err := userCollection.BulkWrite(ctx, updates)
+
+	utils.LogInfo("Released Inventories", "Released Inventories %v", result)
+
+	return err
 }
 
 // UpdatePassword is an abstraction over UpdateOne which updates a user's password
