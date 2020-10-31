@@ -15,8 +15,9 @@ import (
 // Cookie Auth?
 
 // Test Make offers route and see if it replaces the json completely (use robo3t)
-// update vendor inventory after accept offer (decrease) and job completion (increase)
 // update post timestamp
+// how to handle duplicate post creation ?
+// Add names to offers
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
@@ -45,18 +46,19 @@ func newRouter() *fiber.App {
 		client.Get("/post", c.FetchActivePostsByClient)
 		client.Post("/post", c.CreatePost)
 
-		client.Use(m.IsPostOwner)
+		// Actions which only the owner of a post can perform
+		postOwner := client.Group("/post/:id", m.IsPostOwner)
 		{
-			client.Put("/post/:id", c.UpdatePost)
+			postOwner.Put("", c.UpdatePost)
 			// TODO: update vendor inventory after offer/  Debatable too constricting feature
-			client.Patch("/post/:id/offer/:key/accept", c.AcceptOffer)
+			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
 			// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
-			client.Patch("/post/:id/activate", c.ActivatePost)
-			client.Patch("/post/:id/deactivate", c.DeactivatePost)
+			postOwner.Patch("/activate", c.ActivatePost)
+			postOwner.Patch("/deactivate", c.DeactivatePost)
 			// TODO: update vendor inventory after completion/ Debatable too constricting feature
 			// maybe reduce inventory on acceptance, seems right
 			// TODO: make clients/vendors fill a survey after completion?
-			client.Patch("/post/:id/complete", c.MarkComplete)
+			postOwner.Patch("/complete", c.MarkComplete)
 		}
 	}
 

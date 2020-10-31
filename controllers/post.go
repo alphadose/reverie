@@ -159,7 +159,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if !postUpdate.Location.Empty() {
+	if postUpdate.Location != nil {
 		if result, err := validator.ValidateStruct(postUpdate.Location); !result {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
@@ -167,7 +167,6 @@ func UpdatePost(c *fiber.Ctx) error {
 			return utils.ServerError("Post-Controller-10", err)
 		}
 	}
-
 	postID := c.Params("id")
 	if err := mongo.UpdatePost(postID, postUpdate); err != nil {
 		return utils.ServerError("Post-Controller-12", err)

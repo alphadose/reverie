@@ -24,17 +24,12 @@ const (
 // Location denotes the location of the job request
 type Location struct {
 	// Always "Point"
-	Type       string `json:"-" bson:"type"`
+	Type       string `json:"-" bson:"type,omitempty"`
 	Latitude   string `json:"latitude" bson:"latitude,omitempty" valid:"required,latitude"`
 	Longtitude string `json:"longitude" bson:"longitude,omitempty" valid:"required,longitude"`
 	// Coordinates are in the form of [longitude, latitude] according to GeoJSON specifications
 	Coordinates []float64 `json:"-" bson:"coordinates,omitempty"`
 	Place       string    `json:"place" bson:"place,omitempty" valid:"required"`
-}
-
-// Empty checks if the location struct is empty or not
-func (loc Location) Empty() bool {
-	return loc.Latitude == EMPTY && loc.Longtitude == EMPTY && loc.Place == EMPTY
 }
 
 // Post stores the information about a job request
@@ -106,8 +101,8 @@ func (post *Post) UpdateOffers(vendorEmail string, vendorOfferings Inventory) {
 
 // PostUpdate stores the information about a job request which can be updated
 type PostUpdate struct {
-	Description string   `json:"description" bson:"description,omitempty"`
-	Location    Location `json:"location" bson:"location,omitempty"`
+	Description string    `json:"description" bson:"description,omitempty"`
+	Location    *Location `json:"location" bson:"location,omitempty"`
 	// Infrastructure required by the client
 	Requirements Inventory `json:"requirements" bson:"requirements,omitempty"`
 }
