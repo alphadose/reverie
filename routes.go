@@ -59,7 +59,7 @@ func newRouter() *fiber.App {
 	vendor := router.Group("/vendor", m.JWT, m.IsVendor)
 	{
 		vendor.Get("", c.GetLoggedInUserInfo)
-		vendor.Put("/inventory", c.UpdateInventory) // Restrict this, should only happen on our authorization
+		vendor.Put("/inventory", c.InitializeInventory) // Restrict this, should only happen on our authorization
 		vendor.Put("/password", c.UpdatePassword)
 		vendor.Get("/post", c.FetchPostsByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app

@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"github.com/reverie/types"
@@ -31,26 +32,52 @@ const (
 // The link to the user collection
 var userCollection = db.Collection(userCollectionKey)
 
-// UpsertUser is an abstraction over UpdateOne which updates a user
+// upsertUser is an abstraction over UpdateOne which updates a user
 // or inserts it if the corresponding document doesn't exist
-func UpsertUser(filter types.M, user *types.User) error {
+func upsertUser(filter types.M, user *types.User) error {
 	return updateOne(userCollection, filter, user, options.FindOneAndUpdate().SetUpsert(true))
 }
 
 // UpdateUser is an abstraction over UpdateOne which updates a user
 func UpdateUser(filter types.M, data interface{}) error {
-	return updateOne(userCollection, filter, data, nil)
+	return updateOne(userCollection, filter, data)
 }
 
-// UpdateVendorInventory is an abstraction over UpdateOne which updates the vendor's inventory
-func UpdateVendorInventory(email string, inventory *types.Inventory) error {
+// InitVendorInventory initializes the vendor's inventory
+// Should be called only once per vendor and this call should be authorized by us
+func InitVendorInventory(vendorEmail string, inventory *types.Inventory) error {
 	filter := types.M{
-		userEmailKey: email,
+		userEmailKey: vendorEmail,
 	}
 	updatePayload := types.M{
 		userInventoryKey: inventory,
 	}
-	return updateOne(userCollection, filter, updatePayload, nil)
+	return updateOne(userCollection, filter, updatePayload)
+}
+
+// UpdateVendorInventoryOnAcceptance updates a vendor's inventory after their offer has been accepted on a post
+// This deducts the offer contents from the vendor's current inventory
+func UpdateVendorInventoryOnAcceptance(vendorEmail string, offer types.Inventory) error {
+	filter := types.M{
+		userEmailKey: vendorEmail,
+	}
+
+	// Make a map for decrementing the vendor's inventory
+	decrementMap := make(types.M)
+
+	offerValues := reflect.ValueOf(offer)
+	offerKeys := reflect.TypeOf(offer)
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		decrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int() * -1
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	return userCollection.FindOneAndUpdate(ctx, filter, types.M{
+		"$inc": decrementMap,
+	}).Err()
 }
 
 // UpdatePassword is an abstraction over UpdateOne which updates a user's password

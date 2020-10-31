@@ -143,6 +143,8 @@ func DeactivatePost(c *fiber.Ctx) error {
 // MarkComplete marks the status of the post as "COMPLETED"
 // Denotes the end of a job request
 func MarkComplete(c *fiber.Ctx) error {
+	// TODO : release all vendor inventories from accepted offers
+
 	return updatePostStatus(c, types.COMPLETED)
 }
 
@@ -282,7 +284,8 @@ func AcceptOffer(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Offer key %s doesnt exist in post %s for client %s", offerKey, postID, claims.GetEmail()))
 	}
 
-	vendorInventory, err := mongo.FetchVendorInventory(strings.ReplaceAll(offerKey, "_", "."))
+	vendorEmail := strings.ReplaceAll(offerKey, "_", ".")
+	vendorInventory, err := mongo.FetchVendorInventory(vendorEmail)
 	if err != nil {
 		return utils.ServerError("Post-Controller-18", err)
 	}
@@ -317,6 +320,11 @@ func AcceptOffer(c *fiber.Ctx) error {
 	if err := mongo.AcceptOffer(postID, claims.GetEmail(), offerKey, offer); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
+
+	if err := mongo.UpdateVendorInventoryOnAcceptance(vendorEmail, offer); err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})

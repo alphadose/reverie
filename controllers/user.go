@@ -133,8 +133,9 @@ func UpdatePassword(c *fiber.Ctx) error {
 // 	})
 // }
 
-// UpdateInventory updates the inventory for a vendor user
-func UpdateInventory(c *fiber.Ctx) error {
+// InitializeInventory initializes the inventory for a vendor
+// Should be called only once per vendor and this call should be authorized by us
+func InitializeInventory(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
 		return utils.ServerError("User-Controller-13", utils.ErrFailedExtraction)
@@ -143,7 +144,7 @@ func UpdateInventory(c *fiber.Ctx) error {
 	if err := c.BodyParser(inventory); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
-	if err := mongo.UpdateVendorInventory(claims.GetEmail(), inventory); err != nil {
+	if err := mongo.InitVendorInventory(claims.GetEmail(), inventory); err != nil {
 		return utils.ServerError("User-Controller-14", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
