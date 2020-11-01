@@ -140,9 +140,13 @@ func DeactivatePost(c *fiber.Ctx) error {
 // Denotes the end of a job request
 func MarkComplete(c *fiber.Ctx) error {
 	postID := c.Params("id")
-	acceptedOffers, err := mongo.FetchPostAcceptedOffers(postID)
+	acceptedOffers, status, err := mongo.FetchPostAcceptedOffersAndStatus(postID)
 	if err != nil {
 		return utils.ServerError("kekw", err)
+	}
+
+	if status != types.ONGOING {
+		return fiber.NewError(fiber.StatusForbidden, "Only ONGOING posts can be marked completed")
 	}
 
 	if err := mongo.ReleaseVendorInventories(acceptedOffers); err != nil {
@@ -154,6 +158,16 @@ func MarkComplete(c *fiber.Ctx) error {
 // UpdatePost updates the post by a client
 // Can only update description, location and requirements
 func UpdatePost(c *fiber.Ctx) error {
+	postID := c.Params("id")
+	status, err := mongo.FetchPostStatus(postID)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
+
+	if status != types.OPEN {
+		return fiber.NewError(fiber.StatusForbidden, "Only OPEN posts can be updated")
+	}
+
 	postUpdate := &types.PostUpdate{}
 	if err := c.BodyParser(postUpdate); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -167,7 +181,7 @@ func UpdatePost(c *fiber.Ctx) error {
 			return utils.ServerError("Post-Controller-10", err)
 		}
 	}
-	postID := c.Params("id")
+
 	if err := mongo.UpdatePost(postID, postUpdate); err != nil {
 		return utils.ServerError("Post-Controller-12", err)
 	}
@@ -267,9 +281,13 @@ func AcceptOffer(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	offerKey := c.Params("key")
 
-	offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirements(postID)
+	status, offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
 	if err != nil {
 		return utils.ServerError("Post-Controller-18", err)
+	}
+
+	if status != types.OPEN {
+		return fiber.NewError(fiber.StatusForbidden, "Offers can be accepted only on OPEN posts")
 	}
 
 	// Check if offer exists

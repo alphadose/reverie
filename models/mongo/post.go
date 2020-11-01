@@ -179,15 +179,37 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 			"$exists": true,
 		},
 	}, options.Find().SetProjection(types.M{
-		postOwnerKey: 0,
+		postOwnerKey:  0,
+		postOffersKey: 0,
 	}))
 }
 
-// FetchPostOffersAndRequirements returns a post's offers (both accepted and pending) and requirements
-func FetchPostOffersAndRequirements(postID string) (map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
+// FetchPostStatus returns a post's status
+func FetchPostStatus(postID string) (string, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		return nil, nil, types.Inventory{}, err
+		return "", err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	postStatus := &types.PostStatus{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{postStatusKey: 1})).Decode(postStatus)
+	if err != nil {
+		return "", err
+	}
+
+	return postStatus.Value, nil
+}
+
+// FetchPostOffersAndRequirementsAndStatus returns a post's offers (both accepted and pending) and requirements as well as its status
+func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return "", nil, nil, types.Inventory{}, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
@@ -196,11 +218,11 @@ func FetchPostOffersAndRequirements(postID string) (map[string]types.Inventory, 
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
-	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postAcceptedOffersKey: 1, postRequirementsKey: 1})).Decode(post)
+	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postAcceptedOffersKey: 1, postRequirementsKey: 1, postStatusKey: 1})).Decode(post)
 	if err != nil {
-		return nil, nil, types.Inventory{}, err
+		return "", nil, nil, types.Inventory{}, err
 	}
-	return post.Offers, post.AcceptedOffers, post.Requirements, nil
+	return post.Status, post.Offers, post.AcceptedOffers, post.Requirements, nil
 }
 
 // FetchPostRequirements returns the requirements of a post
@@ -222,11 +244,11 @@ func FetchPostRequirements(postID string) (*types.Inventory, error) {
 	return &post.Requirements, nil
 }
 
-// FetchPostAcceptedOffers returns the accepted offers of a post
-func FetchPostAcceptedOffers(postID string) (map[string]types.Inventory, error) {
+// FetchPostAcceptedOffersAndStatus returns the accepted offers of a post as well as its status
+func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Inventory, string, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
@@ -234,11 +256,11 @@ func FetchPostAcceptedOffers(postID string) (map[string]types.Inventory, error) 
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
-	}, options.FindOne().SetProjection(types.M{postAcceptedOffersKey: 1})).Decode(post)
+	}, options.FindOne().SetProjection(types.M{postAcceptedOffersKey: 1, postStatusKey: 1})).Decode(post)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return post.AcceptedOffers, nil
+	return post.AcceptedOffers, post.Status, nil
 }
 
 // AcceptOffer accepts an offer made by a vendor on a post

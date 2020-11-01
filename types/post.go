@@ -123,3 +123,9 @@ func (postUpdate *PostUpdate) InitializeLocation() error {
 
 	return nil
 }
+
+// PostStatus is a low memory footprint struct for retrieving the status of a post
+type PostStatus struct {
+	// Value can be either OPEN, ONGOING, COMPLETED or DELETED
+	Value string `json:"-" bson:"status"`
+}

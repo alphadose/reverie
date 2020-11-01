@@ -52,10 +52,17 @@ func InitVendorInventory(vendorEmail string, inventory *types.Inventory) error {
 	filter := types.M{
 		userEmailKey: vendorEmail,
 	}
-	updatePayload := types.M{
-		userInventoryKey: inventory,
+	// Make a map for initializing the vendor's inventory
+	initMap := make(map[string]int64)
+
+	inventoryValues := reflect.ValueOf(*inventory)
+	inventoryKeys := reflect.TypeOf(*inventory)
+
+	for i := 0; i < inventoryValues.NumField(); i++ {
+		initMap[concat(userInventoryKey, inventoryKeys.Field(i).Name)] = inventoryValues.Field(i).Int()
 	}
-	return updateOne(userCollection, filter, updatePayload)
+
+	return updateOne(userCollection, filter, initMap)
 }
 
 // UpdateVendorInventoryOnAcceptance updates a vendor's inventory after their offer has been accepted on a post

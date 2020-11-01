@@ -10,14 +10,14 @@ import (
 	m "github.com/reverie/middlewares"
 )
 
-// PART LEFT: NOTIFICATIONS, Tracking remaining requirements, Payment, Emails, Managing Vendor Inventory
+// PART LEFT: NOTIFICATIONS, Payment, Emails
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Cookie Auth?
 
-// Test Make offers route and see if it replaces the json completely (use robo3t)
 // update post timestamp
 // how to handle duplicate post creation ?
 // Add names to offers
+// Encrypt vendor emails in post offers and accepted offers ?
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
