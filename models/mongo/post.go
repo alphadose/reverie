@@ -225,11 +225,11 @@ func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]
 	return post.Status, post.Offers, post.AcceptedOffers, post.Requirements, nil
 }
 
-// FetchPostRequirements returns the requirements of a post
-func FetchPostRequirements(postID string) (*types.Inventory, error) {
+// FetchPostRequirementsAndStatus returns the requirements of a post
+func FetchPostRequirementsAndStatus(postID string) (string, *types.Inventory, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
@@ -237,11 +237,11 @@ func FetchPostRequirements(postID string) (*types.Inventory, error) {
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
-	}, options.FindOne().SetProjection(types.M{postRequirementsKey: 1})).Decode(post)
+	}, options.FindOne().SetProjection(types.M{postRequirementsKey: 1, postStatusKey: 1})).Decode(post)
 	if err != nil {
-		return nil, err
+		return "", nil, err
 	}
-	return &post.Requirements, nil
+	return post.Status, &post.Requirements, nil
 }
 
 // FetchPostAcceptedOffersAndStatus returns the accepted offers of a post as well as its status

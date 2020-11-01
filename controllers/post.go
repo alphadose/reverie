@@ -70,7 +70,12 @@ func MakeOffer(c *fiber.Ctx) error {
 	}
 
 	postID := c.Params("id")
-	requirements, err := mongo.FetchPostRequirements(postID)
+	status, requirements, err := mongo.FetchPostRequirementsAndStatus(postID)
+
+	if status != types.OPEN {
+		return fiber.NewError(fiber.StatusForbidden, "Offers can be made only to OPEN posts")
+	}
+
 	if err != nil {
 		return utils.ServerError("Post-Controller", err)
 	}
