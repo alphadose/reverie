@@ -3,6 +3,7 @@ package mongo
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -85,14 +86,15 @@ func UpdatePost(postID string, post *types.PostUpdate) error {
 	return updateOne(postCollection, filter, post)
 }
 
-// UpdatePostOffers adds/updates an offer to a post
+// UpdatePostOffers adds/updates an offer to an OPEN post
 func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
 	}
 	filter := types.M{
-		primaryKey: docID,
+		primaryKey:    docID,
+		postStatusKey: types.OPEN,
 	}
 	updatePayload := types.M{
 		concat(postOffersKey, processEmail(vendorEmail)): offer,
@@ -254,14 +256,25 @@ func AcceptOffer(postID, offerKey string, offer types.Inventory) error {
 		primaryKey: docID,
 	}
 
+	// Make a map for incrementing the post's accepted offers
+	// This is handy if a vendor makes offer twice and both are accepted
+	// This section would combine the 2 individual offers into a single accepted offer
+	incrementMap := make(map[string]int64)
+
+	offerValues := reflect.ValueOf(offer)
+	offerKeys := reflect.TypeOf(offer)
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		key := fmt.Sprintf("%s.%s.%s", postAcceptedOffersKey, offerKey, offerKeys.Field(i).Name)
+		incrementMap[key] = offerValues.Field(i).Int()
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
 		"$unset": types.M{
 			concat(postOffersKey, offerKey): "",
 		},
-		"$set": types.M{
-			concat(postAcceptedOffersKey, offerKey): offer,
-		},
+		"$inc": incrementMap,
 	}).Err()
 }
