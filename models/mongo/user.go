@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"strings"
 	"time"
@@ -59,7 +60,12 @@ func InitVendorInventory(vendorEmail string, inventory *types.Inventory) error {
 	inventoryKeys := reflect.TypeOf(*inventory)
 
 	for i := 0; i < inventoryValues.NumField(); i++ {
-		initMap[concat(userInventoryKey, inventoryKeys.Field(i).Name)] = inventoryValues.Field(i).Int()
+		key := concat(userInventoryKey, inventoryKeys.Field(i).Name)
+		value := inventoryValues.Field(i).Int()
+		if value < 0 {
+			return errors.New("Vendor inventory values cannot be negative")
+		}
+		initMap[key] = value
 	}
 
 	return updateOne(userCollection, filter, initMap)
