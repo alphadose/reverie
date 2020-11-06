@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	validator "github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
@@ -109,7 +110,28 @@ func MakeOffer(c *fiber.Ctx) error {
 		}
 	}
 
-	if err := mongo.UpdatePostOffers(postID, claims.GetEmail(), offer); err != nil {
+	if err := mongo.UpdatePostOffers(postID, claims.GetEmail(), types.Offer{
+		Name:    claims.GetName(),
+		Created: time.Now().Unix(),
+		Content: *offer,
+	}); err != nil {
+		return utils.ServerError("Post-Controller-7", err)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}
+
+// RetractOffer removes a vendor's offer from a post
+func RetractOffer(c *fiber.Ctx) error {
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction)
+	}
+
+	postID := c.Params("id")
+
+	if err := mongo.RetractPostOffer(postID, claims.GetEmail()); err != nil {
 		return utils.ServerError("Post-Controller-7", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
@@ -308,7 +330,7 @@ func AcceptOffer(c *fiber.Ctx) error {
 	}
 
 	// Check if offer exceeds post requirements or vendor's current inventory
-	offerValues := reflect.ValueOf(offer)
+	offerValues := reflect.ValueOf(offer.Content)
 	requirementValues := reflect.ValueOf(requirements)
 	vendorInventoryValues := reflect.ValueOf(*vendorInventory)
 
@@ -322,7 +344,7 @@ func AcceptOffer(c *fiber.Ctx) error {
 	}
 
 	for _, acceptedOffer := range acceptedOffers {
-		acceptedOfferValues := reflect.ValueOf(acceptedOffer)
+		acceptedOfferValues := reflect.ValueOf(acceptedOffer.Content)
 		for i := 0; i < offerValues.NumField(); i++ {
 			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
 		}
@@ -338,7 +360,42 @@ func AcceptOffer(c *fiber.Ctx) error {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 
-	if err := mongo.UpdateVendorInventoryOnAcceptance(vendorEmail, offer); err != nil {
+	if err := mongo.UpdateVendorInventoryOnAcceptance(vendorEmail, offer.Content); err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}
+
+// RejectOffer removes an accepted offer by a client
+func RejectOffer(c *fiber.Ctx) error {
+	postID := c.Params("id")
+	offerKey := c.Params("key")
+
+	acceptedOffers, status, err := mongo.FetchPostAcceptedOffersAndStatus(postID)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
+
+	if status != types.OPEN {
+		return fiber.NewError(fiber.StatusForbidden, "Accepted Offers can be rejected only on OPEN posts")
+	}
+
+	// Check if offer exists
+	offer, ok := acceptedOffers[offerKey]
+	if !ok {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Accepted Offer key %s doesnt exist in post %s", offerKey, postID))
+	}
+
+	vendorEmail := strings.ReplaceAll(offerKey, "_", ".")
+
+	if err := mongo.RejectAcceptedOffer(postID, vendorEmail); err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
+	if err := mongo.ReleaseSingleVendorInventory(vendorEmail, offer.Content); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 

@@ -29,6 +29,9 @@ func setupAdmin() {
 		Email:    adminInfo.Email,
 		Password: pwd,
 		Role:     types.Admin,
+		Inventory: types.Inventory{
+			Truck: 10,
+		},
 	}
 	filter := types.M{userEmailKey: adminInfo.Email}
 	if err := upsertUser(filter, admin); err != nil && err != ErrNoDocuments {

@@ -41,6 +41,15 @@ const (
 	updatedKey = "updated"
 )
 
+// Constants for offer schema
+const (
+	offerNameKey = "name"
+
+	offerContentKey = "content"
+
+	offerTimestampKey = "created"
+)
+
 var postCollection = db.Collection(postCollectionKey)
 
 // convert "." to "_" for storing in mongoDB
@@ -87,19 +96,54 @@ func UpdatePost(postID string, post *types.PostUpdate) error {
 }
 
 // UpdatePostOffers adds/updates an offer to an OPEN post
-func UpdatePostOffers(postID, vendorEmail string, offer *types.Inventory) error {
+func UpdatePostOffers(postID, vendorEmail string, offer types.Offer) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
 	}
 	filter := types.M{
-		primaryKey:    docID,
-		postStatusKey: types.OPEN,
+		primaryKey: docID,
 	}
 	updatePayload := types.M{
 		concat(postOffersKey, processEmail(vendorEmail)): offer,
 	}
 	return updateOne(postCollection, filter, updatePayload)
+}
+
+// RetractPostOffer removes an offer from an OPEN post by a vendor
+func RetractPostOffer(postID, vendorEmail string) error {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	filter := types.M{
+		primaryKey: docID,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
+		"$unset": types.M{
+			concat(postOffersKey, processEmail(vendorEmail)): "",
+		},
+	}).Err()
+}
+
+// RejectAcceptedOffer removes an accepted offer from an OPEN post by a client
+func RejectAcceptedOffer(postID, vendorEmail string) error {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	filter := types.M{
+		primaryKey: docID,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
+		"$unset": types.M{
+			concat(postAcceptedOffersKey, processEmail(vendorEmail)): "",
+		},
+	}).Err()
 }
 
 // FetchActivePostsByClient returns all open/ongoing posts created by a client
@@ -206,7 +250,7 @@ func FetchPostStatus(postID string) (string, error) {
 }
 
 // FetchPostOffersAndRequirementsAndStatus returns a post's offers (both accepted and pending) and requirements as well as its status
-func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]types.Inventory, map[string]types.Inventory, types.Inventory, error) {
+func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]types.Offer, map[string]types.Offer, types.Inventory, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return "", nil, nil, types.Inventory{}, err
@@ -245,7 +289,7 @@ func FetchPostRequirementsAndStatus(postID string) (string, *types.Inventory, er
 }
 
 // FetchPostAcceptedOffersAndStatus returns the accepted offers of a post as well as its status
-func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Inventory, string, error) {
+func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Offer, string, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return nil, "", err
@@ -268,7 +312,7 @@ func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Inventory
 // The param "offerKey" is key of the post holding the offer
 // It is in the form of the vendor's email who made the offer with all "." replaced with "_"
 // For Ex:- If the vendor's email is abc.2000@xyz.com the the key will be abc_2000@xyz_com
-func AcceptOffer(postID, offerKey string, offer types.Inventory) error {
+func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
@@ -283,11 +327,11 @@ func AcceptOffer(postID, offerKey string, offer types.Inventory) error {
 	// This section would combine the 2 individual offers into a single accepted offer
 	incrementMap := make(map[string]int64)
 
-	offerValues := reflect.ValueOf(offer)
-	offerKeys := reflect.TypeOf(offer)
+	offerValues := reflect.ValueOf(offer.Content)
+	offerKeys := reflect.TypeOf(offer.Content)
 
 	for i := 0; i < offerValues.NumField(); i++ {
-		key := fmt.Sprintf("%s.%s.%s", postAcceptedOffersKey, offerKey, offerKeys.Field(i).Name)
+		key := fmt.Sprintf("%s.%s.%s.%s", postAcceptedOffersKey, offerKey, offerContentKey, offerKeys.Field(i).Name)
 		incrementMap[key] = offerValues.Field(i).Int()
 	}
 
@@ -298,5 +342,10 @@ func AcceptOffer(postID, offerKey string, offer types.Inventory) error {
 			concat(postOffersKey, offerKey): "",
 		},
 		"$inc": incrementMap,
+		// TODO : Update $set as more and more fields are added to offer schema
+		"$set": types.M{
+			fmt.Sprintf("%s.%s.%s", postAcceptedOffersKey, offerKey, offerNameKey):      offer.Name,
+			fmt.Sprintf("%s.%s.%s", postAcceptedOffersKey, offerKey, offerTimestampKey): offer.Created,
+		},
 	}).Err()
 }

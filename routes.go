@@ -12,12 +12,11 @@ import (
 
 // PART LEFT: NOTIFICATIONS, Payment, Emails
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
-// Cookie Auth?
+// Store JWT in local storage in frontend
 
 // update post timestamp
 // how to handle duplicate post creation ?
-// Add names to offers
-// Encrypt vendor emails in post offers and accepted offers ?
+// Encrypt vendor emails in post offers and accepted offers ? (low priority)
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
@@ -50,13 +49,12 @@ func newRouter() *fiber.App {
 		postOwner := client.Group("/post/:id", m.IsPostOwner)
 		{
 			postOwner.Put("", c.UpdatePost)
-			// TODO: update vendor inventory after offer/  Debatable too constricting feature
 			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
+			postOwner.Delete("/offer/:key/reject", c.RejectOffer)
+
 			// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
 			postOwner.Patch("/activate", c.ActivatePost)
 			postOwner.Patch("/deactivate", c.DeactivatePost)
-			// TODO: update vendor inventory after completion/ Debatable too constricting feature
-			// maybe reduce inventory on acceptance, seems right
 			// TODO: make clients/vendors fill a survey after completion?
 			postOwner.Patch("/complete", c.MarkComplete)
 		}
@@ -71,6 +69,8 @@ func newRouter() *fiber.App {
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
 		// Always make sure to update the entire body i.e the new body will be the new offer entirely (it replaces the old body, not updates it)
 		vendor.Put("/post/:id/offer", c.MakeOffer)
+		vendor.Delete("/post/:id/retract", c.RetractOffer)
+
 		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
 		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)
 	}

@@ -32,6 +32,14 @@ type Location struct {
 	Place       string    `json:"place" bson:"place,omitempty" valid:"required"`
 }
 
+// Offer stores the information of offers made by vendors to a post
+type Offer struct {
+	// Name of the vendor making the offer
+	Name    string    `json:"name" bson:"name"`
+	Created int64     `json:"created" bson:"created"`
+	Content Inventory `json:"content" bson:"content"`
+}
+
 // Post stores the information about a job request
 type Post struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -44,11 +52,11 @@ type Post struct {
 	Requirements Inventory `json:"requirements" bson:"requirements" valid:"required"`
 
 	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
-	Offers map[string]Inventory `json:"offers,omitempty" bson:"offers,omitempty"`
+	Offers map[string]Offer `json:"offers,omitempty" bson:"offers,omitempty"`
 
 	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
 	// When offers are accepted by the client, they are moved here
-	AcceptedOffers map[string]Inventory `json:"accepted_offers,omitempty" bson:"accepted_offers,omitempty"`
+	AcceptedOffers map[string]Offer `json:"accepted_offers,omitempty" bson:"accepted_offers,omitempty"`
 
 	// Status can be either OPEN, ONGOING, COMPLETED or DELETED
 	Status  string `json:"-" bson:"status"`
@@ -59,8 +67,8 @@ type Post struct {
 // Initialize initializes the post parameters during its creation
 func (post *Post) Initialize() error {
 	// Default maps
-	post.Offers = make(map[string]Inventory)
-	post.AcceptedOffers = make(map[string]Inventory)
+	post.Offers = make(map[string]Offer)
+	post.AcceptedOffers = make(map[string]Offer)
 
 	// Location
 	latitude, err := strconv.ParseFloat(post.Location.Latitude, 64)
@@ -95,7 +103,7 @@ func (post *Post) SetOwner(ownerEmail string) {
 }
 
 // UpdateOffers updates the vendor's offerings in the post's context
-func (post *Post) UpdateOffers(vendorEmail string, vendorOfferings Inventory) {
+func (post *Post) UpdateOffers(vendorEmail string, vendorOfferings Offer) {
 	post.Offers[vendorEmail] = vendorOfferings
 }
 

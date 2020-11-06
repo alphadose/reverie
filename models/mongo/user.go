@@ -96,9 +96,34 @@ func UpdateVendorInventoryOnAcceptance(vendorEmail string, offer types.Inventory
 	}).Err()
 }
 
+// ReleaseSingleVendorInventory updates a vendor's inventory after their offer has been rejected from a post
+// The remainder inventory items are added back to the vendor's inventory pool
+func ReleaseSingleVendorInventory(vendorEmail string, offer types.Inventory) error {
+	filter := types.M{
+		userEmailKey: vendorEmail,
+	}
+
+	// Make a map for incrementing the vendor's inventory
+	incrementMap := make(map[string]int64)
+
+	offerValues := reflect.ValueOf(offer)
+	offerKeys := reflect.TypeOf(offer)
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		incrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int()
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	return userCollection.FindOneAndUpdate(ctx, filter, types.M{
+		"$inc": incrementMap,
+	}).Err()
+}
+
 // ReleaseVendorInventories releases inventories of all vendors bound to a job after it is marked as COMPLETED by the client
 // This set of inventory is then added back to their respective vendor's inventory pool
-func ReleaseVendorInventories(acceptedOffers map[string]types.Inventory) error {
+func ReleaseVendorInventories(acceptedOffers map[string]types.Offer) error {
 	updates := make([]mongo.WriteModel, 0)
 
 	for emailKey, offer := range acceptedOffers {
@@ -107,8 +132,8 @@ func ReleaseVendorInventories(acceptedOffers map[string]types.Inventory) error {
 		// Make a map for incrementing the vendor's inventory
 		incrementMap := make(map[string]int64)
 
-		offerValues := reflect.ValueOf(offer)
-		offerKeys := reflect.TypeOf(offer)
+		offerValues := reflect.ValueOf(offer.Content)
+		offerKeys := reflect.TypeOf(offer.Content)
 
 		for i := 0; i < offerValues.NumField(); i++ {
 			incrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int()
@@ -130,7 +155,8 @@ func ReleaseVendorInventories(acceptedOffers map[string]types.Inventory) error {
 
 	result, err := userCollection.BulkWrite(ctx, updates)
 
-	utils.LogInfo("Released Inventories", "Released Inventories %v", result)
+	// TODO : proper logging on job completion
+	utils.LogInfo("Released Inventories", "Released Inventories %v", *result)
 
 	return err
 }
