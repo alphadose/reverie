@@ -49,7 +49,7 @@ func createGeoIndex() {
 		},
 		{
 			Keys: types.M{
-				updatedKey: -1,
+				updatedKey: 1,
 			},
 		},
 	}

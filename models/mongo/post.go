@@ -187,7 +187,9 @@ func FetchActivePostsByClient(clientEmail string) ([]types.M, error) {
 		postStatusKey: types.M{
 			"$in": []string{types.OPEN, types.ONGOING},
 		},
-	})
+	}, options.Find().SetSort(types.M{
+		updatedKey: -1,
+	}))
 }
 
 // UpdatePostStatus updates the status of the post
@@ -230,7 +232,7 @@ func FetchPostsByVendor(vendorEmail string, pageNumber int64, lookupItems []stri
 			"$exists": false,
 		},
 	}, options.Find().SetSort(types.M{
-		updatedKey: 1,
+		updatedKey: -1,
 	}).SetSkip(pageSize*pageNumber).SetLimit(pageSize).SetProjection(types.M{
 		postOwnerKey:          0,
 		postOffersKey:         0,
@@ -249,7 +251,9 @@ func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		concat(postOffersKey, vendorEmailKey): types.M{
 			"$exists": true,
 		},
-	}, options.Find().SetProjection(types.M{ // TODO : update these fields as more information is added to posts
+	}, options.Find().SetSort(types.M{
+		updatedKey: -1,
+	}).SetProjection(types.M{ // TODO : update these fields as more information is added to posts
 		postNameKey:                           1,
 		postDescriptionKey:                    1,
 		postLocationKey:                       1,
@@ -272,7 +276,9 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		concat(postAcceptedOffersKey, vendorEmailKey): types.M{
 			"$exists": true,
 		},
-	}, options.Find().SetProjection(types.M{ // TODO : update these fields as more information is added to posts
+	}, options.Find().SetSort(types.M{
+		updatedKey: -1,
+	}).SetProjection(types.M{ // TODO : update these fields as more information is added to posts
 		postNameKey:         1,
 		postDescriptionKey:  1,
 		postLocationKey:     1,
