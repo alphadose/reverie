@@ -16,7 +16,6 @@ import (
 
 // update post timestamp
 // how to handle duplicate post creation ?
-// Encrypt vendor emails in post offers and accepted offers ? (low priority)
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
@@ -49,6 +48,7 @@ func newRouter() *fiber.App {
 		postOwner := client.Group("/post/:id", m.IsPostOwner)
 		{
 			postOwner.Put("", c.UpdatePost)
+			postOwner.Delete("", c.DeletePost)
 			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
 			postOwner.Delete("/offer/:key/reject-accepted", c.RejectAcceptedOffer)
 			postOwner.Delete("/offer/:key/reject-pending", c.RejectPendingOffer)

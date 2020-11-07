@@ -163,6 +163,11 @@ func DeactivatePost(c *fiber.Ctx) error {
 	return updatePostStatus(c, types.OPEN)
 }
 
+// DeletePost changes the post status to "DELETED"
+func DeletePost(c *fiber.Ctx) error {
+	return updatePostStatus(c, types.DELETED)
+}
+
 // MarkComplete marks the status of the post as "COMPLETED"
 // Denotes the end of a job request
 func MarkComplete(c *fiber.Ctx) error {
