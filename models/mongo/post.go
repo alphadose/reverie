@@ -16,6 +16,12 @@ const (
 	// postCollectionKey is the collection for all job posts
 	postCollectionKey = "posts"
 
+	// postRequirementsKey is the key denoting the name of a post
+	postNameKey = "name"
+
+	// postRequirementsKey is the key denoting the description of a post
+	postDescriptionKey = "description"
+
 	// postRequirementsKey is the key denoting the requirements for a post
 	postRequirementsKey = "requirements"
 
@@ -243,9 +249,13 @@ func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		concat(postOffersKey, vendorEmailKey): types.M{
 			"$exists": true,
 		},
-	}, options.Find().SetProjection(types.M{
-		postOwnerKey:          0,
-		postAcceptedOffersKey: 0,
+	}, options.Find().SetProjection(types.M{ // TODO : update these fields as more information is added to posts
+		postNameKey:                           1,
+		postDescriptionKey:                    1,
+		postLocationKey:                       1,
+		postRequirementsKey:                   1,
+		createdKey:                            1,
+		concat(postOffersKey, vendorEmailKey): 1,
 	}))
 }
 
@@ -262,9 +272,13 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		concat(postAcceptedOffersKey, vendorEmailKey): types.M{
 			"$exists": true,
 		},
-	}, options.Find().SetProjection(types.M{
-		postOwnerKey:  0,
-		postOffersKey: 0,
+	}, options.Find().SetProjection(types.M{ // TODO : update these fields as more information is added to posts
+		postNameKey:         1,
+		postDescriptionKey:  1,
+		postLocationKey:     1,
+		postRequirementsKey: 1,
+		createdKey:          1,
+		concat(postAcceptedOffersKey, vendorEmailKey): 1,
 	}))
 }
 

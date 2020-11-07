@@ -14,8 +14,14 @@ import (
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Store JWT in local storage in frontend
 
+// Need to make a rulebook for the support team
+// Contents :-
+// 1. For new accepted offer delete the pending one, then ask the vendor to make a new offer and accept the new one
+// 2. For adding contents to existing accepted offer, ask the vendor to make an offer with the remainder, then accept this offer, the new offer gets merged with the existing accepted offer
+// 3. No auditing, hence nothing can be done if accepted/pending offer is deleted (auditing required) or maybe just mark deleted ?
+
+// TODO : refactor mongo code
 // update post timestamp
-// how to handle duplicate post creation ?
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
@@ -56,7 +62,11 @@ func newRouter() *fiber.App {
 			// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
 			postOwner.Patch("/activate", c.ActivatePost)
 			postOwner.Patch("/deactivate", c.DeactivatePost)
+
 			// TODO: make clients/vendors fill a survey after completion?
+			// Restrict this route? client hits this, then we get a mail and approve and then only the process gets completed
+			// We shall hit the admin route
+			// This will generate the payment invoice and mail the client
 			postOwner.Patch("/complete", c.MarkComplete)
 		}
 	}
