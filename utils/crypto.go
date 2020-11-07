@@ -11,6 +11,11 @@ import (
 	"github.com/reverie/configs"
 )
 
+// This module is used for encrypting/decrypting vendor emails
+// Flow with notation:-
+// vendorEmail -> utils.Encrypt -> offerKey
+// offerKey -> utils.Decrypt -> vendorEmail
+
 // The key and the nonce used for encryption
 var (
 	key   []byte

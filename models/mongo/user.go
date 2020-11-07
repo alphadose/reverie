@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/reverie/types"
@@ -126,8 +125,14 @@ func ReleaseSingleVendorInventory(vendorEmail string, offer types.Inventory) err
 func ReleaseVendorInventories(acceptedOffers map[string]types.Offer) error {
 	updates := make([]mongo.WriteModel, 0)
 
-	for emailKey, offer := range acceptedOffers {
-		vendorEmail := strings.ReplaceAll(emailKey, "_", ".")
+	for offerKey, offer := range acceptedOffers {
+		vendorEmail, err := utils.Decrypt(offerKey)
+		// TODO : Mail us in this case, because this means a vendor's inventory did not get released properly
+		// Possible cause: Encryption key or nonce was changed in config.toml mid-production
+		if err != nil {
+			utils.LogError("kekw", err)
+			continue
+		}
 
 		// Make a map for incrementing the vendor's inventory
 		incrementMap := make(map[string]int64)

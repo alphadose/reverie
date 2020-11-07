@@ -301,9 +301,8 @@ func FetchContractedPostsByVendor(c *fiber.Ctx) error {
 
 // AcceptOffer accepts an offer made by a vendor on a post
 // This operation is invoked by the client who is the owner of the post
-// The param "offerKey" is key of the post holding the offer
-// It is in the form of the vendor's email who made the offer with all "." replaced with "_"
-// For Ex:- If the vendor's email is abc.2000@xyz.com the the key will be abc_2000@xyz_com
+// The param "offerKey" is key holding the offer in the post
+// It is the vendor's email address encrypted with AES-256
 func AcceptOffer(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	offerKey := c.Params("key")
@@ -323,7 +322,11 @@ func AcceptOffer(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Offer key %s doesnt exist in post %s", offerKey, postID))
 	}
 
-	vendorEmail := strings.ReplaceAll(offerKey, "_", ".")
+	vendorEmail, err := utils.Decrypt(offerKey)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
+
 	vendorInventory, err := mongo.FetchVendorInventory(vendorEmail)
 	if err != nil {
 		return utils.ServerError("Post-Controller-18", err)
@@ -369,8 +372,8 @@ func AcceptOffer(c *fiber.Ctx) error {
 	})
 }
 
-// RejectOffer removes an accepted offer by a client
-func RejectOffer(c *fiber.Ctx) error {
+// RejectAcceptedOffer removes an accepted offer by a client and adds the offer's contents back to the vendor's inventory
+func RejectAcceptedOffer(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	offerKey := c.Params("key")
 
@@ -389,13 +392,30 @@ func RejectOffer(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Accepted Offer key %s doesnt exist in post %s", offerKey, postID))
 	}
 
-	vendorEmail := strings.ReplaceAll(offerKey, "_", ".")
+	vendorEmail, err := utils.Decrypt(offerKey)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
 
-	if err := mongo.RejectAcceptedOffer(postID, vendorEmail); err != nil {
+	if err := mongo.RejectAcceptedOffer(postID, offerKey); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 
 	if err := mongo.ReleaseSingleVendorInventory(vendorEmail, offer.Content); err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}
+
+// RejectPendingOffer removes a pending offer by a client
+func RejectPendingOffer(c *fiber.Ctx) error {
+	postID := c.Params("id")
+	offerKey := c.Params("key")
+
+	if err := mongo.RejectPendingOffer(postID, offerKey); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/reverie/types"
+	"github.com/reverie/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -53,11 +54,6 @@ const (
 )
 
 var postCollection = db.Collection(postCollectionKey)
-
-// convert "." to "_" for storing in mongoDB
-func processEmail(email string) string {
-	return strings.ReplaceAll(email, ".", "_")
-}
 
 // concatenates strings with "." in between
 func concat(keys ...string) string {
@@ -106,8 +102,12 @@ func UpdatePostOffers(postID, vendorEmail string, offer types.Offer) error {
 	filter := types.M{
 		primaryKey: docID,
 	}
+	vendorEmailKey, err := utils.Encrypt(vendorEmail)
+	if err != nil {
+		return err
+	}
 	updatePayload := types.M{
-		concat(postOffersKey, processEmail(vendorEmail)): offer,
+		concat(postOffersKey, vendorEmailKey): offer,
 	}
 	return updateOne(postCollection, filter, updatePayload)
 }
@@ -121,17 +121,23 @@ func RetractPostOffer(postID, vendorEmail string) error {
 	filter := types.M{
 		primaryKey: docID,
 	}
+	vendorEmailKey, err := utils.Encrypt(vendorEmail)
+	if err != nil {
+		return err
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
 		"$unset": types.M{
-			concat(postOffersKey, processEmail(vendorEmail)): "",
+			concat(postOffersKey, vendorEmailKey): "",
 		},
 	}).Err()
 }
 
 // RejectAcceptedOffer removes an accepted offer from an OPEN post by a client
-func RejectAcceptedOffer(postID, vendorEmail string) error {
+// The param "offerKey" is key holding the offer in the post
+// It is the vendor's email address encrypted with AES-256
+func RejectAcceptedOffer(postID, offerKey string) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
@@ -143,7 +149,27 @@ func RejectAcceptedOffer(postID, vendorEmail string) error {
 	defer cancel()
 	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
 		"$unset": types.M{
-			concat(postAcceptedOffersKey, processEmail(vendorEmail)): "",
+			concat(postAcceptedOffersKey, offerKey): "",
+		},
+	}).Err()
+}
+
+// RejectPendingOffer removes a pending offer from an OPEN post by a client
+// The param "offerKey" is key holding the offer in the post
+// It is the vendor's email address encrypted with AES-256
+func RejectPendingOffer(postID, offerKey string) error {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	filter := types.M{
+		primaryKey: docID,
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
+		"$unset": types.M{
+			concat(postOffersKey, offerKey): "",
 		},
 	}).Err()
 }
@@ -184,13 +210,17 @@ func FetchPostsByVendor(vendorEmail string, pageNumber int64, lookupItems []stri
 			},
 		})
 	}
+	vendorEmailKey, err := utils.Encrypt(vendorEmail)
+	if err != nil {
+		return []types.M{}, err
+	}
 	return fetchDocs(postCollection, types.M{
 		postStatusKey: types.OPEN,
 		"$or":         searchArray,
-		concat(postOffersKey, processEmail(vendorEmail)): types.M{
+		concat(postOffersKey, vendorEmailKey): types.M{
 			"$exists": false,
 		},
-		concat(postAcceptedOffersKey, processEmail(vendorEmail)): types.M{
+		concat(postAcceptedOffersKey, vendorEmailKey): types.M{
 			"$exists": false,
 		},
 	}, options.Find().SetSort(types.M{
@@ -204,9 +234,13 @@ func FetchPostsByVendor(vendorEmail string, pageNumber int64, lookupItems []stri
 
 // FetchOfferedPostsByVendor returns all posts the vendor has made an offer to
 func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
+	vendorEmailKey, err := utils.Encrypt(vendorEmail)
+	if err != nil {
+		return []types.M{}, err
+	}
 	return fetchDocs(postCollection, types.M{
 		postStatusKey: types.OPEN,
-		concat(postOffersKey, processEmail(vendorEmail)): types.M{
+		concat(postOffersKey, vendorEmailKey): types.M{
 			"$exists": true,
 		},
 	}, options.Find().SetProjection(types.M{
@@ -217,11 +251,15 @@ func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
 
 // FetchContractedPostsByVendor returns all posts in which the vendor's offer has been accepted
 func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
+	vendorEmailKey, err := utils.Encrypt(vendorEmail)
+	if err != nil {
+		return []types.M{}, err
+	}
 	return fetchDocs(postCollection, types.M{
 		postStatusKey: types.M{
 			"$in": []string{types.OPEN, types.ONGOING},
 		},
-		concat(postAcceptedOffersKey, processEmail(vendorEmail)): types.M{
+		concat(postAcceptedOffersKey, vendorEmailKey): types.M{
 			"$exists": true,
 		},
 	}, options.Find().SetProjection(types.M{
@@ -311,9 +349,8 @@ func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Offer, st
 
 // AcceptOffer accepts an offer made by a vendor on a post
 // This operation is invoked by the client who is the owner of the post
-// The param "offerKey" is key of the post holding the offer
-// It is in the form of the vendor's email who made the offer with all "." replaced with "_"
-// For Ex:- If the vendor's email is abc.2000@xyz.com the the key will be abc_2000@xyz_com
+// The param "offerKey" is key holding the offer in the post
+// It is the vendor's email address encrypted with AES-256
 func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {

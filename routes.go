@@ -50,7 +50,8 @@ func newRouter() *fiber.App {
 		{
 			postOwner.Put("", c.UpdatePost)
 			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
-			postOwner.Delete("/offer/:key/reject", c.RejectOffer)
+			postOwner.Delete("/offer/:key/reject-accepted", c.RejectAcceptedOffer)
+			postOwner.Delete("/offer/:key/reject-pending", c.RejectPendingOffer)
 
 			// TODO: notify us when post is ongoing to handle end-to-end transactions such as logistics, payment etc
 			postOwner.Patch("/activate", c.ActivatePost)
