@@ -42,10 +42,13 @@ const (
 
 // Constants for offer schema
 const (
+	// the name of the vendor making the offer
 	offerNameKey = "name"
 
+	// contents of the offer in the form of types.Inventory
 	offerContentKey = "content"
 
+	// time of creation of the offer
 	offerTimestampKey = "created"
 )
 
@@ -58,11 +61,7 @@ func processEmail(email string) string {
 
 // concatenates strings with "." in between
 func concat(keys ...string) string {
-	result := ""
-	for _, key := range keys {
-		result = result + "." + key
-	}
-	return result[1:]
+	return strings.Join(keys, ".")
 }
 
 // CreatePost is an abstraction over InsertOne which inserts a post
