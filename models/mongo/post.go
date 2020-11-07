@@ -2,7 +2,6 @@ package mongo
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -57,9 +56,13 @@ func processEmail(email string) string {
 	return strings.ReplaceAll(email, ".", "_")
 }
 
-// concatenates 2 strings with "." in betweem
-func concat(A, B string) string {
-	return fmt.Sprintf("%s.%s", A, B)
+// concatenates strings with "." in between
+func concat(keys ...string) string {
+	result := ""
+	for _, key := range keys {
+		result = result + "." + key
+	}
+	return result[1:]
 }
 
 // CreatePost is an abstraction over InsertOne which inserts a post
@@ -331,7 +334,7 @@ func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 	offerKeys := reflect.TypeOf(offer.Content)
 
 	for i := 0; i < offerValues.NumField(); i++ {
-		key := fmt.Sprintf("%s.%s.%s.%s", postAcceptedOffersKey, offerKey, offerContentKey, offerKeys.Field(i).Name)
+		key := concat(postAcceptedOffersKey, offerKey, offerContentKey, offerKeys.Field(i).Name)
 		incrementMap[key] = offerValues.Field(i).Int()
 	}
 
@@ -344,8 +347,8 @@ func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 		"$inc": incrementMap,
 		// TODO : Update $set as more and more fields are added to offer schema
 		"$set": types.M{
-			fmt.Sprintf("%s.%s.%s", postAcceptedOffersKey, offerKey, offerNameKey):      offer.Name,
-			fmt.Sprintf("%s.%s.%s", postAcceptedOffersKey, offerKey, offerTimestampKey): offer.Created,
+			concat(postAcceptedOffersKey, offerKey, offerNameKey):      offer.Name,
+			concat(postAcceptedOffersKey, offerKey, offerTimestampKey): offer.Created,
 		},
 	}).Err()
 }

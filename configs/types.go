@@ -7,6 +7,12 @@ type Mongo struct {
 	URL string `toml:"url"`
 }
 
+// Crypto is the configuration for encryption/decryption env variables
+type Crypto struct {
+	Key   string `toml:"key"`
+	Nonce string `toml:"nonce"`
+}
+
 // Admin is the configuration for the default Admin
 type Admin struct {
 	Email    string `toml:"email"`
@@ -23,9 +29,10 @@ type JWT struct {
 
 // ProjectCfg is the configuration for the entire project
 type ProjectCfg struct {
-	Debug bool  `toml:"debug"`
-	Port  int   `toml:"port"`
-	Admin Admin `toml:"admin"`
-	Mongo Mongo `toml:"mongo"`
-	JWT   JWT   `toml:"jwt"`
+	Debug  bool   `toml:"debug"`
+	Port   int    `toml:"port"`
+	Crypto Crypto `toml:"crypto"`
+	Admin  Admin  `toml:"admin"`
+	Mongo  Mongo  `toml:"mongo"`
+	JWT    JWT    `toml:"jwt"`
 }

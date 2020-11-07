@@ -12,6 +12,21 @@ debug = true
 port = 3000
 
 
+############################
+#   Crypto Configuration   #
+############################
+
+# WARNING : Do not change these values in production
+# The vendor emails in post offers are encrypted with the below key and nonce values
+# Changing these values mid-production would result in failed decryption thereby breaking the entire system
+[crypto]
+# key should be of 64 characters and alphanumeric, all lowercase
+key = "bc7b462aee7293b010a3a2423772d7feff920f013146196f1ad80212b9cc9697"
+
+# nonce should be of 24 characters and alphanumeric, all lowercase
+nonce = "cdb17034bd9929c3de3eeb40"
+
+
 ###########################
 #   Admin Configuration   #
 ###########################

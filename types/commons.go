@@ -24,6 +24,7 @@ const (
 )
 
 // Inventory stores the items in a vendor's inventory
+// IMPORTANT : All names have to be less than 28 characters due to mongoDB constraints
 type Inventory struct {
 	Truck         int64 `json:"Truck,omitempty" bson:"Truck,omitempty"`
 	Crane         int64 `json:"Crane,omitempty" bson:"Crane,omitempty"`
