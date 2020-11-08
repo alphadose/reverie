@@ -95,7 +95,7 @@ func newRouter() *fiber.App {
 
 	notification := router.Group("/notification", m.JWT)
 	{
-		notification.Get("", c.FetchUnreadNotifications)
+		notification.Get("", c.FetchNotifications)
 		notification.Patch("/:id", c.ReadNotification)
 	}
 

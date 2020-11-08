@@ -15,6 +15,9 @@ const (
 
 	// notificationReadKey denotes if a notification is read or not
 	notificationReadKey = "read"
+
+	// notificationPageSize is the maximum number of notifications per batch
+	notificationPageSize = 20
 )
 
 var notificationCollection = db.Collection(notificationCollectionKey)
@@ -35,12 +38,11 @@ func MarkRead(notificationID, email string) error {
 	return updateOne(notificationCollection, filter, updatePayload)
 }
 
-// FetchUnreadNotifications returns all unread notifications for a user
-func FetchUnreadNotifications(email string) ([]types.M, error) {
+// FetchNotifications returns all notifications for a user
+func FetchNotifications(email string, pageNumber int64) ([]types.M, error) {
 	return fetchDocs(notificationCollection, types.M{
 		notificationRecipentKey: email,
-		notificationReadKey:     false,
 	}, options.Find().SetSort(types.M{
 		createdKey: -1,
-	}))
+	}).SetSkip(notificationPageSize*pageNumber).SetLimit(notificationPageSize))
 }

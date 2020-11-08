@@ -45,6 +45,9 @@ const (
 
 	// updatedKey is the key denoting the timestamp at which the job request was last updated
 	updatedKey = "updated"
+
+	// postPageSize is the maximum number of posts retrieved in one batch for the vendor
+	postPageSize = 30
 )
 
 // Constants for offer schema
@@ -280,7 +283,7 @@ func FetchPostsByVendor(vendorEmail string, pageNumber int64, lookupItems []stri
 		},
 	}, options.Find().SetSort(types.M{
 		updatedKey: -1,
-	}).SetSkip(pageSize*pageNumber).SetLimit(pageSize).SetProjection(types.M{
+	}).SetSkip(postPageSize*pageNumber).SetLimit(postPageSize).SetProjection(types.M{
 		postOwnerKey:          0,
 		postOffersKey:         0,
 		postAcceptedOffersKey: 0,
