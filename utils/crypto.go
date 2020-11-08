@@ -57,10 +57,16 @@ func GenerateNonce() (string, error) {
 
 // Encrypt encrypts a string using AES-256 encryption
 func Encrypt(stringToEncrypt string) (string, error) {
+	// Making it thread safe
+	keyCopy := make([]byte, len(key))
+	nonceCopy := make([]byte, len(nonce))
+	copy(keyCopy, key)
+	copy(nonceCopy, nonce)
+
 	plaintext := []byte(stringToEncrypt)
 
 	//Create a new Cipher Block from the key
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(keyCopy)
 	if err != nil {
 		return "", err
 	}
@@ -73,19 +79,23 @@ func Encrypt(stringToEncrypt string) (string, error) {
 	// Encrypt the data using aesGCM.Seal
 	// Since we don't want to save the nonce somewhere else in this case, we add it as a prefix to the encrypted data
 	// The first nonce argument in Seal is the prefix.
-	ciphertext := aesGCM.Seal(nonce, nonce, plaintext, nil)
+	ciphertext := aesGCM.Seal(nonceCopy, nonceCopy, plaintext, nil)
 	return fmt.Sprintf("%x", ciphertext), nil
 }
 
 // Decrypt decrypts a string using AES-256 encryption
 func Decrypt(encryptedString string) (string, error) {
+	// Making it thread safe
+	keyCopy := make([]byte, len(key))
+	copy(keyCopy, key)
+
 	enc, err := hex.DecodeString(encryptedString)
 	if err != nil {
 		return "", err
 	}
 
 	//Create a new Cipher Block from the key
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(keyCopy)
 	if err != nil {
 		return "", err
 	}
@@ -100,10 +110,10 @@ func Decrypt(encryptedString string) (string, error) {
 	nonceSize := aesGCM.NonceSize()
 
 	//Extract the nonce from the encrypted data
-	nonce, ciphertext := enc[:nonceSize], enc[nonceSize:]
+	nonceCopy, ciphertext := enc[:nonceSize], enc[nonceSize:]
 
 	//Decrypt the data
-	plaintext, err := aesGCM.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := aesGCM.Open(nil, nonceCopy, ciphertext, nil)
 	if err != nil {
 		return "", err
 	}
