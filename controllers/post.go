@@ -34,11 +34,13 @@ func CreatePost(c *fiber.Ctx) error {
 	}
 	post.SetOwner(claims.GetEmail())
 
-	if _, err := mongo.CreatePost(post); err != nil {
+	id, err := mongo.CreatePost(post)
+	if err != nil {
 		return utils.ServerError("Post-Controller-3", err)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
+		"_id":         id,
 	})
 }
 

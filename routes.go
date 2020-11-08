@@ -24,6 +24,7 @@ import (
 // TODO : refactor mongo code
 // TODO : fix context messages and return error messages
 // update post timestamp
+// Add endpoint for fetching completed jobs for both client and vendor
 
 func newRouter() *fiber.App {
 	router := fiber.New(fiber.Config{
