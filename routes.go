@@ -10,7 +10,7 @@ import (
 	m "github.com/reverie/middlewares"
 )
 
-// PART LEFT: NOTIFICATIONS, Payment, Emails
+// PART LEFT: NOTIFICATIONS, Payment, Emails, Order Shipment Tracking
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Store JWT in local storage in frontend
 // Validate email via link during registration

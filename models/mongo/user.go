@@ -64,6 +64,10 @@ func InitVendorInventory(vendorEmail string, inventory *types.Inventory) error {
 		if value < 0 {
 			return errors.New("Vendor inventory values cannot be negative")
 		}
+		// No need to put fields with zero values into mongoDB, wastage of space
+		if value == 0 {
+			continue
+		}
 		initMap[key] = value
 	}
 
@@ -84,7 +88,12 @@ func UpdateVendorInventoryOnAcceptance(vendorEmail string, offer types.Inventory
 	offerKeys := reflect.TypeOf(offer)
 
 	for i := 0; i < offerValues.NumField(); i++ {
-		decrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int() * -1
+		key := concat(userInventoryKey, offerKeys.Field(i).Name)
+		value := offerValues.Field(i).Int() * -1
+		if value == 0 {
+			continue
+		}
+		decrementMap[key] = value
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
@@ -109,7 +118,12 @@ func ReleaseSingleVendorInventory(vendorEmail string, offer types.Inventory) err
 	offerKeys := reflect.TypeOf(offer)
 
 	for i := 0; i < offerValues.NumField(); i++ {
-		incrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int()
+		key := concat(userInventoryKey, offerKeys.Field(i).Name)
+		value := offerValues.Field(i).Int()
+		if value == 0 {
+			continue
+		}
+		incrementMap[key] = value
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
@@ -141,7 +155,12 @@ func ReleaseVendorInventories(acceptedOffers map[string]types.Offer) error {
 		offerKeys := reflect.TypeOf(offer.Content)
 
 		for i := 0; i < offerValues.NumField(); i++ {
-			incrementMap[concat(userInventoryKey, offerKeys.Field(i).Name)] = offerValues.Field(i).Int()
+			key := concat(userInventoryKey, offerKeys.Field(i).Name)
+			value := offerValues.Field(i).Int()
+			if value == 0 {
+				continue
+			}
+			incrementMap[key] = value
 		}
 
 		operation := mongo.NewUpdateOneModel()

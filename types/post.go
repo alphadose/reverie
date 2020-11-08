@@ -105,11 +105,6 @@ func (post *Post) SetOwner(ownerEmail string) {
 	post.Owner = ownerEmail
 }
 
-// UpdateOffers updates the vendor's offerings in the post's context
-func (post *Post) UpdateOffers(vendorEmail string, vendorOfferings Offer) {
-	post.Offers[vendorEmail] = vendorOfferings
-}
-
 // PostUpdate stores the information about a job request which can be updated
 type PostUpdate struct {
 	Description string    `json:"description" bson:"description,omitempty"`

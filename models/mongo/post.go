@@ -438,7 +438,11 @@ func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 
 	for i := 0; i < offerValues.NumField(); i++ {
 		key := concat(postAcceptedOffersKey, offerKey, offerContentKey, offerKeys.Field(i).Name)
-		incrementMap[key] = offerValues.Field(i).Int()
+		value := offerValues.Field(i).Int()
+		if value == 0 {
+			continue
+		}
+		incrementMap[key] = value
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
