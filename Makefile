@@ -70,6 +70,10 @@ test:
 	@go test -race -coverprofile=coverage.txt -covermode=atomic
 	@printf "👍 Done\n"
 
+## crypto: Generate a key and nonce for AES-256 encryption
+crypto:
+	@go run scripts/generate_crypto_vars.go
+
 ## help: Display this help
 help: Makefile
 	@printf "\n Reverie: The dark side of EzFlo\n\n"

@@ -13,6 +13,7 @@ import (
 // PART LEFT: NOTIFICATIONS, Payment, Emails
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Store JWT in local storage in frontend
+// Validate email via link during registration
 
 // Need to make a rulebook for the support team
 // Contents :-
@@ -38,6 +39,7 @@ func newRouter() *fiber.App {
 
 	auth := router.Group("/auth")
 	{
+		// TODO : add email verification here
 		auth.Post("/login", c.Login)
 		auth.Post("/register/client", c.RegisterClient)
 		auth.Post("/register/vendor", c.RegisterVendor)

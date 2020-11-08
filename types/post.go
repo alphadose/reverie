@@ -51,10 +51,10 @@ type Post struct {
 	// Infrastructure required by the client
 	Requirements Inventory `json:"requirements" bson:"requirements" valid:"required"`
 
-	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
+	// In the form of <encrypted email ID of the vendor offering the deal>:<the contents of the offer>
 	Offers map[string]Offer `json:"offers,omitempty" bson:"offers,omitempty"`
 
-	// In the form of <email ID of the vendor offering the deal>:<the contents of the offer>
+	// In the form of <encrypted email ID of the vendor offering the deal>:<the contents of the offer>
 	// When offers are accepted by the client, they are moved here
 	AcceptedOffers map[string]Offer `json:"accepted_offers,omitempty" bson:"accepted_offers,omitempty"`
 
