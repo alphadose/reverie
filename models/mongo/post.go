@@ -192,6 +192,24 @@ func FetchActivePostsByClient(clientEmail string) ([]types.M, error) {
 	}))
 }
 
+// FetchSinglePostByClient returns a single post given its id
+func FetchSinglePostByClient(postID string) (*types.Post, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	post := &types.Post{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne()).Decode(post)
+
+	return post, err
+}
+
 // UpdatePostStatus updates the status of the post
 func UpdatePostStatus(postID, newStatus string) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
@@ -205,6 +223,28 @@ func UpdatePostStatus(postID, newStatus string) error {
 		postStatusKey: newStatus,
 	}
 	return updateOne(postCollection, filter, updatePayload)
+}
+
+// FetchSinglePostByVendor returns a single post given its id
+func FetchSinglePostByVendor(postID string) (*types.Post, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	post := &types.Post{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{
+		postOwnerKey:          0,
+		postOffersKey:         0,
+		postAcceptedOffersKey: 0,
+	})).Decode(post)
+
+	return post, err
 }
 
 // FetchPostsByVendor returns all open posts based on the vendor's inventory

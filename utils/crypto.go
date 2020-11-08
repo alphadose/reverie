@@ -16,6 +16,12 @@ import (
 // vendorEmail -> utils.Encrypt -> offerKey
 // offerKey -> utils.Decrypt -> vendorEmail
 
+// The lengths of key and nonce
+const (
+	keyLength   = 32
+	nonceLength = 12
+)
+
 // The key and the nonce used for encryption
 var (
 	key   []byte
@@ -39,7 +45,7 @@ func init() {
 
 // GenerateRandomKey returns a random 64 character key used for AES-256 encryption
 func GenerateRandomKey() (string, error) {
-	bytes := make([]byte, 32) //generate a random 32 byte key for AES-256
+	bytes := make([]byte, keyLength) //generate a random 32 byte key for AES-256
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
@@ -48,7 +54,7 @@ func GenerateRandomKey() (string, error) {
 
 // GenerateNonce returns a random 24 character nonce used for AES-256 encryption
 func GenerateNonce() (string, error) {
-	bytes := make([]byte, 12) //generate a random 12 byte nonce for AES-256
+	bytes := make([]byte, nonceLength) //generate a random 12 byte nonce for AES-256
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
 	}
@@ -58,8 +64,8 @@ func GenerateNonce() (string, error) {
 // Encrypt encrypts a string using AES-256 encryption
 func Encrypt(stringToEncrypt string) (string, error) {
 	// Making it thread safe
-	keyCopy := make([]byte, len(key))
-	nonceCopy := make([]byte, len(nonce))
+	keyCopy := make([]byte, keyLength)
+	nonceCopy := make([]byte, nonceLength)
 	copy(keyCopy, key)
 	copy(nonceCopy, nonce)
 
@@ -86,7 +92,7 @@ func Encrypt(stringToEncrypt string) (string, error) {
 // Decrypt decrypts a string using AES-256 encryption
 func Decrypt(encryptedString string) (string, error) {
 	// Making it thread safe
-	keyCopy := make([]byte, len(key))
+	keyCopy := make([]byte, keyLength)
 	copy(keyCopy, key)
 
 	enc, err := hex.DecodeString(encryptedString)

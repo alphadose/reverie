@@ -22,6 +22,7 @@ import (
 // 3. No auditing, hence nothing can be done if accepted/pending offer is deleted (auditing required) or maybe just mark deleted ?
 
 // TODO : refactor mongo code
+// TODO : fix context messages and return error messages
 // update post timestamp
 
 func newRouter() *fiber.App {
@@ -55,6 +56,7 @@ func newRouter() *fiber.App {
 		// Actions which only the owner of a post can perform
 		postOwner := client.Group("/post/:id", m.IsPostOwner)
 		{
+			postOwner.Get("", c.FetchSinglePostByClient)
 			postOwner.Put("", c.UpdatePost)
 			postOwner.Delete("", c.DeletePost)
 			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
@@ -79,6 +81,7 @@ func newRouter() *fiber.App {
 		vendor.Put("/inventory", c.InitializeInventory) // Restrict this, should only happen on our authorization
 		vendor.Put("/password", c.UpdatePassword)
 		vendor.Get("/post", c.FetchPostsByVendor)
+		vendor.Get("/post/:id", c.FetchSinglePostByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
 		// Always make sure to update the entire body i.e the new body will be the new offer entirely (it replaces the old body, not updates it)
 		vendor.Put("/post/:id/offer", c.MakeOffer)

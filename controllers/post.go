@@ -58,6 +58,18 @@ func FetchActivePostsByClient(c *fiber.Ctx) error {
 	})
 }
 
+// FetchSinglePostByClient returns a single post given its id
+func FetchSinglePostByClient(c *fiber.Ctx) error {
+	postID := c.Params("id")
+
+	post, err := mongo.FetchSinglePostByClient(postID)
+	if err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(post)
+}
+
 // MakeOffer adds/updates a vendor's offer to a post
 func MakeOffer(c *fiber.Ctx) error {
 	offer := &types.Inventory{}
@@ -302,6 +314,18 @@ func FetchContractedPostsByVendor(c *fiber.Ctx) error {
 		types.Success: true,
 		"data":        contractedPosts,
 	})
+}
+
+// FetchSinglePostByVendor returns a single post given its id
+func FetchSinglePostByVendor(c *fiber.Ctx) error {
+	postID := c.Params("id")
+
+	post, err := mongo.FetchSinglePostByVendor(postID)
+	if err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(post)
 }
 
 // AcceptOffer accepts an offer made by a vendor on a post
