@@ -29,7 +29,7 @@ func setupAdmin() {
 		Email:    adminInfo.Email,
 		Password: pwd,
 		Role:     types.Admin,
-		Inventory: types.Inventory{
+		Inventory: &types.Inventory{
 			Truck: 10,
 		},
 	}

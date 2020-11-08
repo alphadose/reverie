@@ -30,6 +30,11 @@ type Notification struct {
 	// Message contains the body of the notification
 	Message string `json:"message" bson:"message"`
 
+	// DesiredContent is the offer desired from a vendor by a client
+	// If a client wants a vendor to change his offer, this field shall hold the final contents desired by the client
+	// This field is only populated if the notification is of type REQUEST_OFFER_CHANGE
+	DesiredContent *Inventory `json:"desired_content,omitempty" bson:"desired_content,omitempty"`
+
 	// Read denotes whether the notification is read or not
 	Read bool `json:"read" bson:"read"`
 

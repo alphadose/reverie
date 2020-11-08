@@ -223,7 +223,7 @@ func FetchVendorInventory(vendorEmail string) (*types.Inventory, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &user.Inventory, nil
+	return user.Inventory, nil
 }
 
 // FetchSingleUserWithoutPassword returns a user based on a email based filter without his/her password

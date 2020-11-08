@@ -46,12 +46,12 @@ func (claims *Claims) IsAdmin() bool {
 
 // User stores user related information
 type User struct {
-	Email     string    `json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
-	Password  string    `json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
-	Username  string    `json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,alphanum~Field 'username' should only have alphanumeric characters,stringlength(5|40)~Field 'username' should have length between 5 to 40 characters"`
-	Role      string    `json:"-" bson:"role"`
-	Inventory Inventory `json:"inventory,omitempty" bson:"inventory,omitempty"`
-	Success   bool      `json:"success,omitempty" bson:"-"`
+	Email     string     `json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
+	Password  string     `json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
+	Username  string     `json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,alphanum~Field 'username' should only have alphanumeric characters,stringlength(5|40)~Field 'username' should have length between 5 to 40 characters"`
+	Role      string     `json:"-" bson:"role"`
+	Inventory *Inventory `json:"inventory,omitempty" bson:"inventory,omitempty"`
+	Success   bool       `json:"success,omitempty" bson:"-"`
 }
 
 // GetName returns the user's username

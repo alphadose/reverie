@@ -93,6 +93,12 @@ func newRouter() *fiber.App {
 		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)
 	}
 
+	notification := router.Group("/notification", m.JWT)
+	{
+		notification.Get("", c.FetchUnreadNotifications)
+		notification.Patch("/:id", c.ReadNotification)
+	}
+
 	router.Use(c.Handle404)
 
 	return router
