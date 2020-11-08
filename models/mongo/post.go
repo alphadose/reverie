@@ -226,22 +226,29 @@ func UpdatePostStatus(postID, newStatus string) error {
 }
 
 // FetchSinglePostByVendor returns a single post given its id
-func FetchSinglePostByVendor(postID string) (*types.Post, error) {
+func FetchSinglePostByVendor(postID, vendorEmail string) (*types.Post, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return nil, err
 	}
-
+	vendorEmailKey, err := utils.Encrypt(vendorEmail)
+	if err != nil {
+		return nil, err
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
-	}, options.FindOne().SetProjection(types.M{
-		postOwnerKey:          0,
-		postOffersKey:         0,
-		postAcceptedOffersKey: 0,
+	}, options.FindOne().SetProjection(types.M{ // TODO : update these fields as more information is added to posts
+		postNameKey:                           1,
+		postDescriptionKey:                    1,
+		postLocationKey:                       1,
+		postRequirementsKey:                   1,
+		createdKey:                            1,
+		concat(postOffersKey, vendorEmailKey): 1,
+		concat(postAcceptedOffersKey, vendorEmailKey): 1,
 	})).Decode(post)
 
 	return post, err

@@ -23,6 +23,7 @@ import (
 
 // TODO : refactor mongo code
 // TODO : fix context messages and return error messages
+// TODO : add suggestion to client in frontend for activating post when all criteria has been satisfied
 // update post timestamp
 // Add endpoint for fetching completed jobs for both client and vendor
 

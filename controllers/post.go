@@ -320,9 +320,13 @@ func FetchContractedPostsByVendor(c *fiber.Ctx) error {
 
 // FetchSinglePostByVendor returns a single post given its id
 func FetchSinglePostByVendor(c *fiber.Ctx) error {
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction)
+	}
 	postID := c.Params("id")
 
-	post, err := mongo.FetchSinglePostByVendor(postID)
+	post, err := mongo.FetchSinglePostByVendor(postID, claims.GetEmail())
 	if err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}

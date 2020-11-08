@@ -3,8 +3,8 @@ package types
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 const (
-	// REQUEST_OFFER_CHANGE is the type of notification sent when a client requests a vendor to change his offer
-	REQUEST_OFFER_CHANGE = "REQUEST_OFFER_CHANGE"
+	// RequestOfferChange is the type of notification sent when a client requests a vendor to change his offer
+	RequestOfferChange = "REQUEST_OFFER_CHANGE"
 
 	// INFO is the type of notification sent as means of informing clients/vendors for cases such as when an offer has been accepted, a post has started/completed etc
 	INFO = "INFO"
