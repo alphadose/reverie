@@ -359,6 +359,48 @@ func FetchPostStatus(postID string) (string, error) {
 	return postStatus.Value, nil
 }
 
+// FetchPostName returns a post's name
+func FetchPostName(postID string) (string, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return "", err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	name := &types.PostName{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{postNameKey: 1})).Decode(name)
+	if err != nil {
+		return "", err
+	}
+
+	return name.Value, nil
+}
+
+// FetchPostNameAndOwner returns a post's name and owner
+func FetchPostNameAndOwner(postID string) (string, string, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return "", "", err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	contract := &types.PostNameAndOwner{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{postNameKey: 1, postOwnerKey: 1})).Decode(contract)
+	if err != nil {
+		return "", "", err
+	}
+
+	return contract.Name, contract.Owner, nil
+}
+
 // FetchPostOffersAndRequirementsAndStatus returns a post's offers (both accepted and pending) and requirements as well as its status
 func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]types.Offer, map[string]types.Offer, types.Inventory, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
@@ -415,6 +457,25 @@ func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Offer, st
 		return nil, "", err
 	}
 	return post.AcceptedOffers, post.Status, nil
+}
+
+// FetchPostAcceptedOffersAndName returns the accepted offers of a post as well as its name
+func FetchPostAcceptedOffersAndName(postID string) (map[string]types.Offer, string, error) {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, "", err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+
+	post := &types.Post{}
+	err = postCollection.FindOne(ctx, types.M{
+		primaryKey: docID,
+	}, options.FindOne().SetProjection(types.M{postAcceptedOffersKey: 1, postNameKey: 1})).Decode(post)
+	if err != nil {
+		return nil, "", err
+	}
+	return post.AcceptedOffers, post.Name, nil
 }
 
 // AcceptOffer accepts an offer made by a vendor on a post

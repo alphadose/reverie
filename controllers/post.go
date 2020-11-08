@@ -131,6 +131,9 @@ func MakeOffer(c *fiber.Ctx) error {
 	}); err != nil {
 		return utils.ServerError("Post-Controller-7", err)
 	}
+
+	go mongo.NotifyClient(postID, claims.GetName()+" made an offer to your post %s")
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})
@@ -148,6 +151,9 @@ func RetractOffer(c *fiber.Ctx) error {
 	if err := mongo.RetractPostOffer(postID, claims.GetEmail()); err != nil {
 		return utils.ServerError("Post-Controller-7", err)
 	}
+
+	go mongo.NotifyClient(postID, claims.GetName()+" retracted his offer from your post %s")
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})
@@ -159,6 +165,10 @@ func updatePostStatus(c *fiber.Ctx, status string) error {
 	if err := mongo.UpdatePostStatus(postID, status); err != nil {
 		return utils.ServerError("Post-Controller-9", err)
 	}
+
+	// Notify all vendors whose offers have been accepted
+	go mongo.BulkNotifyVendors(postID, status)
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})
@@ -402,6 +412,9 @@ func AcceptOffer(c *fiber.Ctx) error {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 
+	// Notify vendor
+	go mongo.NotifyVendorOnAcceptance(postID, vendorEmail)
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})
@@ -440,6 +453,9 @@ func RejectAcceptedOffer(c *fiber.Ctx) error {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 
+	// Notify vendor
+	go mongo.NotifyVendorOnRejection(postID, vendorEmail)
+
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
 	})
@@ -450,9 +466,17 @@ func RejectPendingOffer(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	offerKey := c.Params("key")
 
+	vendorEmail, err := utils.Decrypt(offerKey)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
+
 	if err := mongo.RejectPendingOffer(postID, offerKey); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
+
+	// Notify vendor
+	go mongo.NotifyVendorOnRejection(postID, vendorEmail)
 
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,

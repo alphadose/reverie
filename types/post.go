@@ -135,3 +135,14 @@ type PostStatus struct {
 	// Value can be either OPEN, ONGOING, COMPLETED or DELETED
 	Value string `json:"-" bson:"status"`
 }
+
+// PostName is a low memory footprint struct for retrieving the name of a post
+type PostName struct {
+	Value string `json:"-" bson:"name"`
+}
+
+// PostNameAndOwner is a low memory footprint struct for retrieving the name and owner of a post
+type PostNameAndOwner struct {
+	Name  string `json:"-" bson:"name"`
+	Owner string `json:"-" bson:"owner"`
+}

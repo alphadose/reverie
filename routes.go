@@ -10,7 +10,7 @@ import (
 	m "github.com/reverie/middlewares"
 )
 
-// PART LEFT: NOTIFICATIONS, Payment, Emails, Order Shipment Tracking
+// PART LEFT: Payment, Emails, Order Shipment Tracking
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Store JWT in local storage in frontend
 // Validate email via link during registration
@@ -61,6 +61,7 @@ func newRouter() *fiber.App {
 			postOwner.Get("", c.FetchSinglePostByClient)
 			postOwner.Put("", c.UpdatePost)
 			postOwner.Delete("", c.DeletePost)
+
 			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
 			postOwner.Delete("/offer/:key/reject-accepted", c.RejectAcceptedOffer)
 			postOwner.Delete("/offer/:key/reject-pending", c.RejectPendingOffer)
@@ -86,8 +87,8 @@ func newRouter() *fiber.App {
 		vendor.Get("/post/:id", c.FetchSinglePostByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
 		// Always make sure to update the entire body i.e the new body will be the new offer entirely (it replaces the old body, not updates it)
-		vendor.Put("/post/:id/offer", c.MakeOffer)
-		vendor.Delete("/post/:id/retract", c.RetractOffer)
+		vendor.Put("/post/:id/offer", c.MakeOffer)         // notif required
+		vendor.Delete("/post/:id/retract", c.RetractOffer) // notif required
 
 		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
 		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)
