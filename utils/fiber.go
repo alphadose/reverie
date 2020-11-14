@@ -2,6 +2,8 @@ package utils
 
 import (
 	"errors"
+	"reflect"
+	"unsafe"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
@@ -41,4 +43,24 @@ func ExtractClaims(c *fiber.Ctx) *types.Claims {
 		Username: username,
 		Role:     role,
 	}
+}
+
+func unsafeBytes(s string) (bs []byte) {
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&bs))
+	bh.Data = sh.Data
+	bh.Len = sh.Len
+	bh.Cap = sh.Len
+	return
+}
+
+// ImmutableString copies a string to make it immutable
+// This is required becase fiber has zero allocation policy and its params are used per request
+// i.e it cannot be used in goroutines
+// For ex:- If you used `bar := c.Params("foo")` and then `go someFunc(bar)`, then bar will be invalid inside the goroutine
+// Hence this function is necessary to make a copy of the string ensuring it stays valid even in goroutines
+// IMPORTANT :- Use this function only when the extracted params are to be passed to some goroutine inside the handler
+// Dont use this unnecessarily to avoid wasteful memory allocations
+func ImmutableString(s string) string {
+	return string(unsafeBytes(s))
 }
