@@ -14,6 +14,8 @@ import (
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Store JWT in local storage in frontend
 // Validate email via link during registration
+// possible race condition for postid and notifications
+// Always show remaining inventory when viewing posts ? Helps vendor to make better offers. Add it to FetchSinglePostByVendor, or dynamically update requirements ?
 
 // Need to make a rulebook for the support team
 // Contents :-
@@ -63,6 +65,7 @@ func newRouter() *fiber.App {
 			postOwner.Delete("", c.DeletePost)
 
 			postOwner.Patch("/offer/:key/accept", c.AcceptOffer)
+			postOwner.Put("/offer/:key/request-change", c.RequestOfferChange)
 			postOwner.Delete("/offer/:key/reject-accepted", c.RejectAcceptedOffer)
 			postOwner.Delete("/offer/:key/reject-pending", c.RejectPendingOffer)
 
@@ -87,8 +90,8 @@ func newRouter() *fiber.App {
 		vendor.Get("/post/:id", c.FetchSinglePostByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
 		// Always make sure to update the entire body i.e the new body will be the new offer entirely (it replaces the old body, not updates it)
-		vendor.Put("/post/:id/offer", c.MakeOffer)         // notif required
-		vendor.Delete("/post/:id/retract", c.RetractOffer) // notif required
+		vendor.Put("/post/:id/offer", c.MakeOffer)
+		vendor.Delete("/post/:id/retract", c.RetractOffer)
 
 		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
 		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)

@@ -167,3 +167,25 @@ func NotifyClient(postID, messageTemplate string) {
 		utils.LogError("", err)
 	}
 }
+
+// NotifyOfferChangeToVendor notifies a vendor whenever a client requests changes on his offer
+func NotifyOfferChangeToVendor(postID, vendorEmail string, offerChange *types.Inventory) error {
+	docID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return err
+	}
+	postName, err := FetchPostName(postID)
+	if err != nil {
+		return err
+	}
+	_, err = insertOne(notificationCollection, types.Notification{
+		PostID:         docID,
+		Recipent:       vendorEmail,
+		Type:           types.RequestOfferChange,
+		Message:        fmt.Sprintf("Changes requested on post %s", postName),
+		Read:           false,
+		DesiredContent: offerChange,
+		Created:        time.Now().Unix(),
+	})
+	return err
+}

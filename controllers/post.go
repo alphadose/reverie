@@ -482,3 +482,79 @@ func RejectPendingOffer(c *fiber.Ctx) error {
 		types.Success: true,
 	})
 }
+
+// RequestOfferChange is a request for change by the client on an offer on his post
+// This operation is invoked by the client who is the owner of the post
+// Ex:- Suppose a vendor has offered 3 trucks but the client only wants 2 trucks
+// In this case the client requests the vendor to change his offer to 2 trucks
+// The param "offerKey" is key holding the offer in the post
+// It is the vendor's email address encrypted with AES-256
+func RequestOfferChange(c *fiber.Ctx) error {
+	postID := c.Params("id")
+	offerKey := c.Params("key")
+
+	offerChange := &types.Inventory{}
+	if err := c.BodyParser(offerChange); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	status, offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
+	if err != nil {
+		return utils.ServerError("Post-Controller-18", err)
+	}
+
+	if status != types.OPEN {
+		return fiber.NewError(fiber.StatusForbidden, "Offers can be accepted only on OPEN posts")
+	}
+
+	// Check if offer exists
+	_, ok := offers[offerKey]
+	if !ok {
+		return fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("Offer key %s doesnt exist in post %s", offerKey, postID))
+	}
+
+	vendorEmail, err := utils.Decrypt(offerKey)
+	if err != nil {
+		return utils.ServerError("kekw", err)
+	}
+
+	vendorInventory, err := mongo.FetchVendorInventory(vendorEmail)
+	if err != nil {
+		return utils.ServerError("Post-Controller-18", err)
+	}
+
+	// Check if offer exceeds post requirements or vendor's current inventory
+	offerValues := reflect.ValueOf(offerChange)
+	requirementValues := reflect.ValueOf(requirements)
+	vendorInventoryValues := reflect.ValueOf(*vendorInventory)
+
+	sanityChecker := make([]int64, offerValues.NumField())
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		if offerValues.Field(i).Int() > vendorInventoryValues.Field(i).Int() {
+			fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the vendor's current inventory limits")
+		}
+		sanityChecker[i] = requirementValues.Field(i).Int() - offerValues.Field(i).Int()
+	}
+
+	for _, acceptedOffer := range acceptedOffers {
+		acceptedOfferValues := reflect.ValueOf(acceptedOffer.Content)
+		for i := 0; i < offerValues.NumField(); i++ {
+			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
+		}
+	}
+
+	for _, check := range sanityChecker {
+		if check < 0 {
+			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the post's requirements")
+		}
+	}
+
+	if err := mongo.NotifyOfferChangeToVendor(postID, vendorEmail, offerChange); err != nil {
+		return utils.ServerError("Post-Controller-19", err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}
