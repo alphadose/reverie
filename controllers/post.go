@@ -84,7 +84,7 @@ func MakeOffer(c *fiber.Ctx) error {
 		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction)
 	}
 
-	postID := c.Params("id")
+	postID := utils.ImmutableString(c.Params("id"))
 	status, requirements, err := mongo.FetchPostRequirementsAndStatus(postID)
 
 	if status != types.OPEN {
@@ -146,7 +146,7 @@ func RetractOffer(c *fiber.Ctx) error {
 		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction)
 	}
 
-	postID := c.Params("id")
+	postID := utils.ImmutableString(c.Params("id"))
 
 	if err := mongo.RetractPostOffer(postID, claims.GetEmail()); err != nil {
 		return utils.ServerError("Post-Controller-7", err)
@@ -161,7 +161,7 @@ func RetractOffer(c *fiber.Ctx) error {
 
 // updatePostStatus updates the status of a post
 func updatePostStatus(c *fiber.Ctx, status string) error {
-	postID := c.Params("id")
+	postID := utils.ImmutableString(c.Params("id"))
 	if err := mongo.UpdatePostStatus(postID, status); err != nil {
 		return utils.ServerError("Post-Controller-9", err)
 	}
@@ -349,10 +349,10 @@ func FetchSinglePostByVendor(c *fiber.Ctx) error {
 // The param "offerKey" is key holding the offer in the post
 // It is the vendor's email address encrypted with AES-256
 func AcceptOffer(c *fiber.Ctx) error {
-	postID := c.Params("id")
+	postID := utils.ImmutableString(c.Params("id"))
 	offerKey := c.Params("key")
 
-	status, offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
+	status, offers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
 	if err != nil {
 		return utils.ServerError("Post-Controller-18", err)
 	}
@@ -391,13 +391,6 @@ func AcceptOffer(c *fiber.Ctx) error {
 		sanityChecker[i] = requirementValues.Field(i).Int() - offerValues.Field(i).Int()
 	}
 
-	for _, acceptedOffer := range acceptedOffers {
-		acceptedOfferValues := reflect.ValueOf(acceptedOffer.Content)
-		for i := 0; i < offerValues.NumField(); i++ {
-			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
-		}
-	}
-
 	for _, check := range sanityChecker {
 		if check < 0 {
 			return fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the post's requirements")
@@ -422,7 +415,7 @@ func AcceptOffer(c *fiber.Ctx) error {
 
 // RejectAcceptedOffer removes an accepted offer by a client and adds the offer's contents back to the vendor's inventory
 func RejectAcceptedOffer(c *fiber.Ctx) error {
-	postID := c.Params("id")
+	postID := utils.ImmutableString(c.Params("id"))
 	offerKey := c.Params("key")
 
 	acceptedOffers, status, err := mongo.FetchPostAcceptedOffersAndStatus(postID)
@@ -445,7 +438,7 @@ func RejectAcceptedOffer(c *fiber.Ctx) error {
 		return utils.ServerError("kekw", err)
 	}
 
-	if err := mongo.RejectAcceptedOffer(postID, offerKey); err != nil {
+	if err := mongo.RejectAcceptedOffer(postID, offerKey, offer.Content); err != nil {
 		return utils.ServerError("Post-Controller-19", err)
 	}
 
@@ -463,7 +456,7 @@ func RejectAcceptedOffer(c *fiber.Ctx) error {
 
 // RejectPendingOffer removes a pending offer by a client
 func RejectPendingOffer(c *fiber.Ctx) error {
-	postID := c.Params("id")
+	postID := utils.ImmutableString(c.Params("id"))
 	offerKey := c.Params("key")
 
 	vendorEmail, err := utils.Decrypt(offerKey)
@@ -488,6 +481,7 @@ func RejectPendingOffer(c *fiber.Ctx) error {
 // Ex:- Suppose a vendor has offered 3 trucks but the client only wants 2 trucks
 // In this case the client requests the vendor to change his offer to 2 trucks
 // The param "offerKey" is key holding the offer in the post
+// The body "offerChange" holds the final offer desired by the client
 // It is the vendor's email address encrypted with AES-256
 func RequestOfferChange(c *fiber.Ctx) error {
 	postID := c.Params("id")
@@ -498,7 +492,7 @@ func RequestOfferChange(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	status, offers, acceptedOffers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
+	status, offers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
 	if err != nil {
 		return utils.ServerError("Post-Controller-18", err)
 	}
@@ -535,13 +529,6 @@ func RequestOfferChange(c *fiber.Ctx) error {
 			fiber.NewError(fiber.StatusBadRequest, "Offer values exceed the vendor's current inventory limits")
 		}
 		sanityChecker[i] = requirementValues.Field(i).Int() - offerValues.Field(i).Int()
-	}
-
-	for _, acceptedOffer := range acceptedOffers {
-		acceptedOfferValues := reflect.ValueOf(acceptedOffer.Content)
-		for i := 0; i < offerValues.NumField(); i++ {
-			sanityChecker[i] -= acceptedOfferValues.Field(i).Int()
-		}
 	}
 
 	for _, check := range sanityChecker {

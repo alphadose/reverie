@@ -14,8 +14,7 @@ import (
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
 // Store JWT in local storage in frontend
 // Validate email via link during registration
-// possible race condition for postid and notifications
-// Always show remaining inventory when viewing posts ? Helps vendor to make better offers. Add it to FetchSinglePostByVendor, or dynamically update requirements ?
+// TODO : No need to fetch all accepted offers, just the key (map reduce)
 
 // Need to make a rulebook for the support team
 // Contents :-

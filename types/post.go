@@ -49,6 +49,7 @@ type Post struct {
 	Location    Location           `json:"location" bson:"location" valid:"required"`
 
 	// Infrastructure required by the client
+	// This is dynamic and shall change as offers are accepted/rejected
 	Requirements Inventory `json:"requirements" bson:"requirements" valid:"required"`
 
 	// In the form of <encrypted email ID of the vendor offering the deal>:<the contents of the offer>

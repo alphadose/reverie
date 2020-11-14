@@ -146,7 +146,7 @@ func RetractPostOffer(postID, vendorEmail string) error {
 // RejectAcceptedOffer removes an accepted offer from an OPEN post by a client
 // The param "offerKey" is key holding the offer in the post
 // It is the vendor's email address encrypted with AES-256
-func RejectAcceptedOffer(postID, offerKey string) error {
+func RejectAcceptedOffer(postID, offerKey string, offer types.Inventory) error {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return err
@@ -154,12 +154,29 @@ func RejectAcceptedOffer(postID, offerKey string) error {
 	filter := types.M{
 		primaryKey: docID,
 	}
+
+	// Make a map for incrementing the posts's current requirements
+	incrementMap := make(map[string]int64)
+
+	offerValues := reflect.ValueOf(offer)
+	offerKeys := reflect.TypeOf(offer)
+
+	for i := 0; i < offerValues.NumField(); i++ {
+		value := offerValues.Field(i).Int()
+		if value == 0 {
+			continue
+		}
+		key := concat(postRequirementsKey, offerKeys.Field(i).Name)
+		incrementMap[key] = value
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
 	return postCollection.FindOneAndUpdate(ctx, filter, types.M{
 		"$unset": types.M{
 			concat(postAcceptedOffersKey, offerKey): "",
 		},
+		"$inc": incrementMap,
 	}).Err()
 }
 
@@ -402,10 +419,10 @@ func FetchPostNameAndOwner(postID string) (string, string, error) {
 }
 
 // FetchPostOffersAndRequirementsAndStatus returns a post's offers (both accepted and pending) and requirements as well as its status
-func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]types.Offer, map[string]types.Offer, types.Inventory, error) {
+func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]types.Offer, types.Inventory, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		return "", nil, nil, types.Inventory{}, err
+		return "", nil, types.Inventory{}, err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
@@ -414,11 +431,11 @@ func FetchPostOffersAndRequirementsAndStatus(postID string) (string, map[string]
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
-	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postAcceptedOffersKey: 1, postRequirementsKey: 1, postStatusKey: 1})).Decode(post)
+	}, options.FindOne().SetProjection(types.M{postOffersKey: 1, postRequirementsKey: 1, postStatusKey: 1})).Decode(post)
 	if err != nil {
-		return "", nil, nil, types.Inventory{}, err
+		return "", nil, types.Inventory{}, err
 	}
-	return post.Status, post.Offers, post.AcceptedOffers, post.Requirements, nil
+	return post.Status, post.Offers, post.Requirements, nil
 }
 
 // FetchPostRequirementsAndStatus returns the requirements of a post
@@ -492,21 +509,23 @@ func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 		primaryKey: docID,
 	}
 
-	// Make a map for incrementing the post's accepted offers
+	// Make a map for incrementing the post's accepted offers and decrementing the posts's current requirements
 	// This is handy if a vendor makes offer twice and both are accepted
 	// This section would combine the 2 individual offers into a single accepted offer
-	incrementMap := make(map[string]int64)
+	changeMap := make(map[string]int64)
 
 	offerValues := reflect.ValueOf(offer.Content)
 	offerKeys := reflect.TypeOf(offer.Content)
 
 	for i := 0; i < offerValues.NumField(); i++ {
-		key := concat(postAcceptedOffersKey, offerKey, offerContentKey, offerKeys.Field(i).Name)
 		value := offerValues.Field(i).Int()
 		if value == 0 {
 			continue
 		}
-		incrementMap[key] = value
+		acceptedOfferIncrementKey := concat(postAcceptedOffersKey, offerKey, offerContentKey, offerKeys.Field(i).Name)
+		requirementsDecrementKey := concat(postRequirementsKey, offerKeys.Field(i).Name)
+		changeMap[acceptedOfferIncrementKey] = value
+		changeMap[requirementsDecrementKey] = value * -1
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
@@ -515,7 +534,7 @@ func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 		"$unset": types.M{
 			concat(postOffersKey, offerKey): "",
 		},
-		"$inc": incrementMap,
+		"$inc": changeMap,
 		// TODO : Update $set as more and more fields are added to offer schema
 		"$set": types.M{
 			concat(postAcceptedOffersKey, offerKey, offerNameKey):      offer.Name,

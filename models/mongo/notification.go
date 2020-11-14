@@ -106,6 +106,7 @@ func BulkNotifyVendors(postID, status string) {
 		utils.LogError("", err)
 		return
 	}
+	// TODO: need only keys from accepted offers, not the entire collection
 	acceptedOffers, postName, err := FetchPostAcceptedOffersAndName(postID)
 	if err != nil {
 		utils.LogError("", err)
