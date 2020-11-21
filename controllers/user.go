@@ -159,10 +159,10 @@ func Login(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	user, err := mongo.FetchSingleUser(auth.GetEmail())
-	if err != nil {
+	if err != nil && err != mongo.ErrNoDocuments {
 		return utils.ServerError("User-Controller-15", err)
 	}
-	if !utils.CompareHashWithPassword(user.GetPassword(), auth.GetPassword()) {
+	if err == mongo.ErrNoDocuments || !utils.CompareHashWithPassword(user.GetPassword(), auth.GetPassword()) {
 		return fiber.NewError(fiber.StatusUnauthorized, "Incorrect Email or Password")
 	}
 

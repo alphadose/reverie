@@ -108,10 +108,10 @@ func (post *Post) SetOwner(ownerEmail string) {
 
 // PostUpdate stores the information about a job request which can be updated
 type PostUpdate struct {
-	Description string    `json:"description" bson:"description,omitempty"`
-	Location    *Location `json:"location" bson:"location,omitempty"`
+	Description string    `json:"description,omitempty" bson:"description,omitempty"`
+	Location    *Location `json:"location,omitempty" bson:"location,omitempty"`
 	// Infrastructure required by the client
-	Requirements Inventory `json:"requirements" bson:"requirements,omitempty"`
+	Requirements Inventory `json:"requirements,omitempty" bson:"requirements,omitempty"`
 }
 
 // InitializeLocation initializes the post update location paramters
