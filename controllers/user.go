@@ -25,7 +25,7 @@ func registerUser(c *fiber.Ctx, role string) error {
 
 	unique, err := mongo.IsUniqueEmail(user.GetEmail())
 	if err != nil {
-		return utils.ServerError("User-Controller-1", err)
+		return utils.ServerError("User-Controller-1", err, c)
 	}
 	if !unique {
 		return fiber.NewError(fiber.StatusBadRequest, "Email already registered")
@@ -33,13 +33,13 @@ func registerUser(c *fiber.Ctx, role string) error {
 
 	hashedPass, err := utils.HashPassword(user.GetPassword())
 	if err != nil {
-		return utils.ServerError("User-Controller-2", err)
+		return utils.ServerError("User-Controller-2", err, c)
 	}
 	user.SetPassword(hashedPass)
 	user.SetRole(role)
 
 	if _, err = mongo.RegisterUser(user); err != nil {
-		return utils.ServerError("User-Controller-3", err)
+		return utils.ServerError("User-Controller-3", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -63,7 +63,7 @@ func GetUserInfo(c *fiber.Ctx) error {
 		if err == mongo.ErrNoDocuments {
 			return fiber.NewError(fiber.StatusNotFound, "No such user exists")
 		}
-		return utils.ServerError("User-Controller-4", err)
+		return utils.ServerError("User-Controller-4", err, c)
 	}
 	user.SetSuccess(true)
 	return c.Status(fiber.StatusOK).JSON(user)
@@ -73,11 +73,11 @@ func GetUserInfo(c *fiber.Ctx) error {
 func GetLoggedInUserInfo(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("User-Controller-5", utils.ErrFailedExtraction)
+		return utils.ServerError("User-Controller-5", utils.ErrFailedExtraction, c)
 	}
 	user, err := mongo.FetchSingleUserWithoutPassword(claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("User-Controller-6", err)
+		return utils.ServerError("User-Controller-6", err, c)
 	}
 	user.SetSuccess(true)
 	return c.Status(fiber.StatusOK).JSON(user)
@@ -91,21 +91,21 @@ func UpdatePassword(c *fiber.Ctx) error {
 	}
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("User-Controller-7", utils.ErrFailedExtraction)
+		return utils.ServerError("User-Controller-7", utils.ErrFailedExtraction, c)
 	}
 	user, err := mongo.FetchSingleUser(claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("User-Controller-8", err)
+		return utils.ServerError("User-Controller-8", err, c)
 	}
 	if !utils.CompareHashWithPassword(user.GetPassword(), passwordUpdate.GetOldPassword()) {
 		return fiber.NewError(fiber.StatusUnauthorized, "Old password is invalid")
 	}
 	hashedPass, err := utils.HashPassword(passwordUpdate.GetNewPassword())
 	if err != nil {
-		return utils.ServerError("User-Controller-9", err)
+		return utils.ServerError("User-Controller-9", err, c)
 	}
 	if err = mongo.UpdatePassword(user.GetEmail(), hashedPass); err != nil {
-		return utils.ServerError("User-Controller-10", err)
+		return utils.ServerError("User-Controller-10", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -116,7 +116,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 // func DeleteUser(c *fiber.Ctx) error {
 // 	claims := utils.ExtractClaims(c)
 // 	if claims == nil {
-// 		return utils.ServerError("User-Controller-11", utils.ErrFailedExtraction)
+// 		return utils.ServerError("User-Controller-11", utils.ErrFailedExtraction, c)
 // 	}
 // 	filter := types.M{
 // 		mongo.EmailKey: claims.GetEmail(),
@@ -126,7 +126,7 @@ func UpdatePassword(c *fiber.Ctx) error {
 // 	}
 // 	err := mongo.UpdateUser(filter, updatePayload)
 // 	if err != nil {
-// 		return utils.ServerError("User-Controller-12", err)
+// 		return utils.ServerError("User-Controller-12", err, c)
 // 	}
 // 	return c.Status(fiber.StatusOK).JSON(types.M{
 // 		types.Success: true,
@@ -138,14 +138,14 @@ func UpdatePassword(c *fiber.Ctx) error {
 func InitializeInventory(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("User-Controller-13", utils.ErrFailedExtraction)
+		return utils.ServerError("User-Controller-13", utils.ErrFailedExtraction, c)
 	}
 	inventory := &types.Inventory{}
 	if err := c.BodyParser(inventory); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	if err := mongo.InitVendorInventory(claims.GetEmail(), inventory); err != nil {
-		return utils.ServerError("User-Controller-14", err)
+		return utils.ServerError("User-Controller-14", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -160,7 +160,7 @@ func Login(c *fiber.Ctx) error {
 	}
 	user, err := mongo.FetchSingleUser(auth.GetEmail())
 	if err != nil && err != mongo.ErrNoDocuments {
-		return utils.ServerError("User-Controller-15", err)
+		return utils.ServerError("User-Controller-15", err, c)
 	}
 	if err == mongo.ErrNoDocuments || !utils.CompareHashWithPassword(user.GetPassword(), auth.GetPassword()) {
 		return fiber.NewError(fiber.StatusUnauthorized, "Incorrect Email or Password")
@@ -181,7 +181,7 @@ func Login(c *fiber.Ctx) error {
 	// Generate encoded token and send it as response.
 	encryptedToken, err := token.SignedString([]byte(configs.JWTConfig.Secret))
 	if err != nil {
-		return utils.ServerError("User-Controller-16", err)
+		return utils.ServerError("User-Controller-16", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(types.M{

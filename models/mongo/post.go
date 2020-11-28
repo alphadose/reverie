@@ -37,6 +37,9 @@ const (
 	// postOwnerKey is the key holding the owner email of a post
 	postOwnerKey = "owner"
 
+	// postOwnerNameKey is the key holding the owner's name of a post
+	postOwnerNameKey = "owner_name"
+
 	// postStatusKey is the key holding the status of a post
 	postStatusKey = "status"
 
@@ -264,6 +267,7 @@ func FetchSinglePostByVendor(postID, vendorEmail string) (*types.Post, error) {
 	}, options.FindOne().SetProjection(types.M{ // TODO : update these fields as more information is added to posts
 		postNameKey:                           1,
 		postDescriptionKey:                    1,
+		postOwnerNameKey:                      1,
 		postLocationKey:                       1,
 		postRequirementsKey:                   1,
 		createdKey:                            1,
@@ -325,6 +329,7 @@ func FetchOfferedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		postDescriptionKey:                    1,
 		postLocationKey:                       1,
 		postRequirementsKey:                   1,
+		postOwnerNameKey:                      1,
 		createdKey:                            1,
 		concat(postOffersKey, vendorEmailKey): 1,
 	}))
@@ -350,6 +355,7 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		postDescriptionKey:  1,
 		postLocationKey:     1,
 		postRequirementsKey: 1,
+		postOwnerNameKey:    1,
 		createdKey:          1,
 		concat(postAcceptedOffersKey, vendorEmailKey): 1,
 	}))

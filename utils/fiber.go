@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"unsafe"
 
@@ -11,8 +12,8 @@ import (
 )
 
 // ServerError sends internal server error messages
-func ServerError(logContext string, err error) error {
-	LogError(logContext, err)
+func ServerError(logContext string, err error, c *fiber.Ctx) error {
+	LogError(logContext, fmt.Errorf("%v\nRequest: %v\nIP:  %v", err, c.Request(), c.IP()))
 	return err
 }
 

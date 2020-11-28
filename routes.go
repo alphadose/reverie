@@ -10,9 +10,12 @@ import (
 	m "github.com/reverie/middlewares"
 )
 
+// Owner Name of the post sent to vendors? In case the post creator is a middleman and the actual company is Tata or LNT. The post should be registered with the end client's details to garner brand value for easier transactions with vendors.
+// duration of the post and timeline ?
+// add cost to offers, vendors shall add cost when making offers
+// timeline is important http://localhost:8080/extra-pages/timeline
 // PART LEFT: Payment, Emails, Order Shipment Tracking
 // Request for increment/decrement/removal of offer items to vendors (to be handled via notifications)
-// Store JWT in local storage in frontend
 // Validate email via link during registration
 // TODO : No need to fetch all accepted offers, just the key (map reduce)
 

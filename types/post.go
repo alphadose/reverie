@@ -42,11 +42,15 @@ type Offer struct {
 
 // Post stores the information about a job request
 type Post struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Owner       string             `json:"owner,omitempty" bson:"owner"`
-	Name        string             `json:"name" bson:"name" valid:"required,stringlength(5|100)~Field 'name' should have length between 5 to 100 characters"`
-	Description string             `json:"description" bson:"description" valid:"required"`
-	Location    Location           `json:"location" bson:"location" valid:"required"`
+	ID primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	// Email ID of the owner of the post
+	Owner string `json:"owner,omitempty" bson:"owner"`
+	// Name of the owner of the post
+	OwnerName string `json:"owner_name,omitempty" bson:"owner_name"`
+	// Short summary of the post
+	Name        string   `json:"name" bson:"name" valid:"required,stringlength(5|100)~Field 'name' should have length between 5 to 100 characters"`
+	Description string   `json:"description" bson:"description" valid:"required"`
+	Location    Location `json:"location" bson:"location" valid:"required"`
 
 	// Infrastructure required by the client
 	// This is dynamic and shall change as offers are accepted/rejected
@@ -104,6 +108,11 @@ func (post *Post) UpdateTimestamp() {
 // SetOwner sets the owner in the post's context
 func (post *Post) SetOwner(ownerEmail string) {
 	post.Owner = ownerEmail
+}
+
+// SetOwnerName sets the owner's name in the post's context
+func (post *Post) SetOwnerName(name string) {
+	post.OwnerName = name
 }
 
 // PostUpdate stores the information about a job request which can be updated
