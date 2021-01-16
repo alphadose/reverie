@@ -46,12 +46,16 @@ func (claims *Claims) IsAdmin() bool {
 
 // User stores user related information
 type User struct {
-	Email     string     `json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
-	Password  string     `json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
-	Username  string     `json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,matches(^[\\p{L} .'-]+$)"`
-	Role      string     `json:"-" bson:"role"`
-	Inventory *Inventory `json:"inventory,omitempty" bson:"inventory,omitempty"`
-	Success   bool       `json:"success,omitempty" bson:"-"`
+	Email         string     `json:"email" binding:"required" bson:"email" valid:"required~Field 'email' is required but was not provided,email"`
+	Password      string     `json:"password,omitempty" bson:"password" binding:"required" valid:"required~Field 'password' is required but was not provided"`
+	Username      string     `json:"username" bson:"username" binding:"required" valid:"required~Field 'username' is required but was not provided,matches(^[\\p{L} .'-]+$)"`
+	Phone         string     `json:"phone" bson:"phone" binding:"required" valid:"required~Field 'phone' is required but was not provided"`
+	Company       string     `json:"company" bson:"company"`
+	Designation   string     `json:"designation" bson:"designation"`
+	OfficeAddress string     `json:"office_address" bson:"office_address" binding:"required" valid:"required~Field 'office_address' is required but was not provided"`
+	Role          string     `json:"-" bson:"role"`
+	Inventory     *Inventory `json:"inventory,omitempty" bson:"inventory,omitempty"`
+	Success       bool       `json:"success,omitempty" bson:"-"`
 }
 
 // GetName returns the user's username

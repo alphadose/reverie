@@ -28,6 +28,9 @@ const (
 	// postOffersKey is the key denoting the offers made to a post by a vendor
 	postOffersKey = "offers"
 
+	// postCommentsKey is the key denoting the comments accompanying the requirements in a post
+	postCommentsKey = "comments"
+
 	// postAcceptedOffersKey is the key denoting the offers accepted on a post by a client
 	postAcceptedOffersKey = "accepted_offers"
 
@@ -270,6 +273,7 @@ func FetchSinglePostByVendor(postID, vendorEmail string) (*types.Post, error) {
 		postOwnerNameKey:                      1,
 		postLocationKey:                       1,
 		postRequirementsKey:                   1,
+		postCommentsKey:                       1,
 		createdKey:                            1,
 		concat(postOffersKey, vendorEmailKey): 1,
 		concat(postAcceptedOffersKey, vendorEmailKey): 1,
@@ -356,6 +360,7 @@ func FetchContractedPostsByVendor(vendorEmail string) ([]types.M, error) {
 		postLocationKey:     1,
 		postRequirementsKey: 1,
 		postOwnerNameKey:    1,
+		postCommentsKey:     1,
 		createdKey:          1,
 		concat(postAcceptedOffersKey, vendorEmailKey): 1,
 	}))

@@ -56,6 +56,10 @@ type Post struct {
 	// This is dynamic and shall change as offers are accepted/rejected
 	Requirements Inventory `json:"requirements" bson:"requirements" valid:"required"`
 
+	// Additional information accompanying the post's requirements
+	// Ex:- A client needs 500 tonnes crane so he can specify that within comments
+	Comments map[string]string `json:"comments" bson:"comments"`
+
 	// In the form of <encrypted email ID of the vendor offering the deal>:<the contents of the offer>
 	Offers map[string]Offer `json:"offers,omitempty" bson:"offers,omitempty"`
 
