@@ -65,7 +65,6 @@ func GetUserInfo(c *fiber.Ctx) error {
 		}
 		return utils.ServerError("User-Controller-4", err, c)
 	}
-	user.SetSuccess(true)
 	return c.Status(fiber.StatusOK).JSON(user)
 }
 
@@ -79,7 +78,6 @@ func GetLoggedInUserInfo(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.ServerError("User-Controller-6", err, c)
 	}
-	user.SetSuccess(true)
 	return c.Status(fiber.StatusOK).JSON(user)
 }
 
@@ -164,6 +162,10 @@ func Login(c *fiber.Ctx) error {
 	}
 	if err == mongo.ErrNoDocuments || !utils.CompareHashWithPassword(user.GetPassword(), auth.GetPassword()) {
 		return fiber.NewError(fiber.StatusUnauthorized, "Incorrect Email or Password")
+	}
+
+	if !user.IsVerified() {
+		return fiber.NewError(fiber.StatusUnauthorized, "User's email is not verified, Please check your email")
 	}
 
 	// Create token

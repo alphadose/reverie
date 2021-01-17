@@ -55,7 +55,7 @@ type User struct {
 	OfficeAddress string     `json:"office_address" bson:"office_address" binding:"required" valid:"required~Field 'office_address' is required but was not provided"`
 	Role          string     `json:"-" bson:"role"`
 	Inventory     *Inventory `json:"inventory,omitempty" bson:"inventory,omitempty"`
-	Success       bool       `json:"success,omitempty" bson:"-"`
+	Verified      bool       `json:"-" bson:"verified"`
 }
 
 // GetName returns the user's username
@@ -94,22 +94,7 @@ func (user *User) GetRole() string {
 	return user.Role
 }
 
-// IsClient checks of the user is a client or not
-func (user *User) IsClient() bool {
-	return user.Role == Client
-}
-
-// IsVendor checks of the user is a vendor or not
-func (user *User) IsVendor() bool {
-	return user.Role == Vendor
-}
-
-// IsAdmin checks of the user is an admin or not
-func (user *User) IsAdmin() bool {
-	return user.Role == Admin
-}
-
-// SetSuccess defines the success of user creation
-func (user *User) SetSuccess(success bool) {
-	user.Success = success
+// IsVerified checks whether the user is verified or not
+func (user *User) IsVerified() bool {
+	return user.Verified
 }

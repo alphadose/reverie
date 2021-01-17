@@ -25,10 +25,15 @@ func setupAdmin() {
 		os.Exit(1)
 	}
 	admin := &types.User{
-		Username: adminInfo.Username,
-		Email:    adminInfo.Email,
-		Password: pwd,
-		Role:     types.Admin,
+		Username:      adminInfo.Username,
+		Email:         adminInfo.Email,
+		Password:      pwd,
+		Role:          types.Admin,
+		Company:       "EzFlo",
+		Designation:   "Co-Founder",
+		Phone:         "911",
+		OfficeAddress: "Rourkela",
+		Verified:      true,
 		Inventory: &types.Inventory{
 			Truck: 10,
 		},

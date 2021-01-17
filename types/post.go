@@ -29,7 +29,13 @@ type Location struct {
 	Longtitude string `json:"longitude" bson:"longitude,omitempty" valid:"required,longitude"`
 	// Coordinates are in the form of [longitude, latitude] according to GeoJSON specifications
 	Coordinates []float64 `json:"-" bson:"coordinates,omitempty"`
-	Place       string    `json:"place" bson:"place,omitempty" valid:"required"`
+	AdminArea1  string    `json:"administrative_area_level_1" bson:"administrative_area_level_1,omitempty" valid:"required"`
+	AdminArea2  string    `json:"administrative_area_level_2" bson:"administrative_area_level_2,omitempty"`
+	Country     string    `json:"country" bson:"country,omitempty" valid:"required"`
+	Locality    string    `json:"locality" bson:"locality,omitempty" valid:"required"`
+	PostalCode  string    `json:"postal_code" bson:"postal_code,omitempty"`
+	Route       string    `json:"route" bson:"route,omitempty" valid:"required"`
+	Street      string    `json:"street_number" bson:"street_number,omitempty"`
 }
 
 // Offer stores the information of offers made by vendors to a post
