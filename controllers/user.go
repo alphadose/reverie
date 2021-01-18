@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"time"
 
 	validator "github.com/asaskevich/govalidator"
@@ -8,8 +9,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/reverie/configs"
 	"github.com/reverie/models/mongo"
+	"github.com/reverie/sendgrid"
 	"github.com/reverie/types"
 	"github.com/reverie/utils"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // registerUser handles registration of new users
@@ -38,8 +41,12 @@ func registerUser(c *fiber.Ctx, role string) error {
 	user.SetPassword(hashedPass)
 	user.SetRole(role)
 
-	if _, err = mongo.RegisterUser(user); err != nil {
+	var userID interface{}
+	if userID, err = mongo.RegisterUser(user); err != nil {
 		return utils.ServerError("User-Controller-3", err, c)
+	}
+	if err := sendgrid.SendConfirmationEmail(user.GetName(), user.GetEmail(), userID.(primitive.ObjectID).Hex()); err != nil {
+		return utils.ServerError("User-Controller-4", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -191,4 +198,21 @@ func Login(c *fiber.Ctx) error {
 		"token":       encryptedToken,
 		"expiry":      expiry,
 	})
+}
+
+// VerifyUserEmail handles the user's email verification
+func VerifyUserEmail(c *fiber.Ctx) error {
+	token := c.Query("token")
+	if err := mongo.VerifyUserEmail(token); err != nil {
+		return utils.ServerError("User-Controller-17", err, c)
+	}
+	c.Set("Content-Type", "text/html; charset=UTF-8")
+	return c.Send([]byte(fmt.Sprintf(`
+<html>
+<body>
+Email Verification Successful <br> <br>
+
+Click <a href="%s/auth/sign-in1">here</a> to login
+</body>
+</html>`, configs.Project.SendGrid.FrontendEndpoint)))
 }

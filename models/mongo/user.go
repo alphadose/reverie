@@ -8,6 +8,7 @@ import (
 
 	"github.com/reverie/types"
 	"github.com/reverie/utils"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,6 +31,9 @@ const (
 
 	// userInventoryKey is the key denoting the inventory of a user
 	userInventoryKey = "inventory"
+
+	// userVerifiedKey is the key denoting the whether the user is verified or not
+	userVerifiedKey = "verified"
 )
 
 // The link to the user collection
@@ -242,4 +246,19 @@ func IsUniqueEmail(email string) (bool, error) {
 		return false, err
 	}
 	return count == 0, nil
+}
+
+// VerifyUserEmail sets the user's verified field to true
+func VerifyUserEmail(userID string) error {
+	docID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	filter := types.M{
+		primaryKey: docID,
+	}
+	updatePayload := types.M{
+		userVerifiedKey: true,
+	}
+	return updateOne(userCollection, filter, updatePayload, nil)
 }

@@ -3,8 +3,6 @@
 github.com/BurntSushi/toml
 # github.com/andybalholm/brotli v1.0.0
 github.com/andybalholm/brotli
-# github.com/appleboy/gin-jwt/v2 v2.6.4
-## explicit
 # github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef
 ## explicit
 github.com/asaskevich/govalidator
@@ -29,8 +27,6 @@ github.com/aws/aws-sdk-go/private/protocol/rest
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
-# github.com/gin-gonic/gin v1.6.3
-## explicit
 # github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack
 # github.com/gofiber/fiber/v2 v2.1.1
@@ -47,8 +43,6 @@ github.com/gofiber/fiber/v2/utils
 # github.com/gofiber/jwt/v2 v2.0.1
 ## explicit
 github.com/gofiber/jwt/v2
-# github.com/golang/protobuf v1.4.1
-## explicit
 # github.com/golang/snappy v0.0.1
 github.com/golang/snappy
 # github.com/jmespath/go-jmespath v0.4.0
@@ -64,6 +58,13 @@ github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/pkg/errors v0.9.1
 github.com/pkg/errors
+# github.com/sendgrid/rest v2.6.2+incompatible
+## explicit
+github.com/sendgrid/rest
+# github.com/sendgrid/sendgrid-go v3.7.2+incompatible
+## explicit
+github.com/sendgrid/sendgrid-go
+github.com/sendgrid/sendgrid-go/helpers/mail
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasthttp v1.16.0

@@ -8,6 +8,8 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gofiber/fiber/v2 v2.1.1
 	github.com/gofiber/jwt/v2 v2.0.1
+	github.com/sendgrid/rest v2.6.2+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.7.2+incompatible
 	github.com/xdg/stringprep v1.0.0 // indirect
 	go.mongodb.org/mongo-driver v1.4.2
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0

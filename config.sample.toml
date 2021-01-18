@@ -65,3 +65,18 @@ max_refresh = 2419200 # 28 days
 
 # Secret Key used for encrypting the JWT token.
 secret = "YOUR_SECRET_KEY"
+
+
+##############################
+#   SendGrid Configuration   #
+##############################
+
+# Configuration for SendGrid email service provider
+[sendgrid]
+
+# The API key used for authentication.
+key = "YOUR_SECRET_KEY"
+
+backend_endpoint = "http://localhost:3000"
+
+frontend_endpoint = "http://localhost:8080"

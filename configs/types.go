@@ -27,12 +27,20 @@ type JWT struct {
 	Secret     string        `toml:"secret"`
 }
 
+// SendGrid is the configuration for SendGrid email service provider
+type SendGrid struct {
+	Key              string `toml:"key"`
+	BackendEndpoint  string `toml:"backend_endpoint"`
+	FrontendEndpoint string `toml:"frontend_endpoint"`
+}
+
 // ProjectCfg is the configuration for the entire project
 type ProjectCfg struct {
-	Debug  bool   `toml:"debug"`
-	Port   int    `toml:"port"`
-	Crypto Crypto `toml:"crypto"`
-	Admin  Admin  `toml:"admin"`
-	Mongo  Mongo  `toml:"mongo"`
-	JWT    JWT    `toml:"jwt"`
+	Debug    bool     `toml:"debug"`
+	Port     int      `toml:"port"`
+	Crypto   Crypto   `toml:"crypto"`
+	Admin    Admin    `toml:"admin"`
+	Mongo    Mongo    `toml:"mongo"`
+	JWT      JWT      `toml:"jwt"`
+	SendGrid SendGrid `toml:"sendgrid"`
 }
