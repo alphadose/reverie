@@ -66,6 +66,9 @@ const (
 
 	// time of creation of the offer
 	offerTimestampKey = "created"
+
+	// The fees charged for the vendor's services in indian rupees per day
+	offerRateKey = "rate"
 )
 
 var postCollection = db.Collection(postCollectionKey)
@@ -550,6 +553,7 @@ func AcceptOffer(postID, offerKey string, offer types.Offer) error {
 		"$set": types.M{
 			concat(postAcceptedOffersKey, offerKey, offerNameKey):      offer.Name,
 			concat(postAcceptedOffersKey, offerKey, offerTimestampKey): offer.Created,
+			concat(postAcceptedOffersKey, offerKey, offerRateKey):      offer.Rate,
 		},
 	}).Err()
 }

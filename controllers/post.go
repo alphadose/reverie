@@ -74,6 +74,11 @@ func FetchSinglePostByClient(c *fiber.Ctx) error {
 
 // MakeOffer adds/updates a vendor's offer to a post
 func MakeOffer(c *fiber.Ctx) error {
+	rate, err := strconv.ParseFloat(c.Params("rate"), 64)
+	if err != nil {
+		return utils.ServerError("Post-Controller-6", err, c)
+	}
+
 	offer := &types.Inventory{}
 	if err := c.BodyParser(offer); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -128,6 +133,7 @@ func MakeOffer(c *fiber.Ctx) error {
 		Name:    claims.GetName(),
 		Created: time.Now().Unix(),
 		Content: *offer,
+		Rate:    rate,
 	}); err != nil {
 		return utils.ServerError("Post-Controller-7", err, c)
 	}

@@ -44,6 +44,8 @@ type Offer struct {
 	Name    string    `json:"name" bson:"name"`
 	Created int64     `json:"created" bson:"created"`
 	Content Inventory `json:"content" bson:"content"`
+	// The fees charged for the vendor's services in indian rupees per day
+	Rate float64 `json:"rate" bson:"rate"`
 }
 
 // Post stores the information about a job request

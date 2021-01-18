@@ -12,10 +12,10 @@ import (
 
 // Owner Name of the post sent to vendors? In case the post creator is a middleman and the actual company is Tata or LNT. The post should be registered with the end client's details to garner brand value for easier transactions with vendors.
 // duration of the post and timeline ?
-// add cost to offers, vendors shall add cost when making offers
 // timeline is important http://localhost:8080/extra-pages/timeline
 // PART LEFT: Payment, Emails, Order Shipment Tracking
 // TODO : No need to fetch all accepted offers, just the key (map reduce)
+// Password reset
 
 // Need to make a rulebook for the support team
 // Contents :-
@@ -91,7 +91,7 @@ func newRouter() *fiber.App {
 		vendor.Get("/post/:id", c.FetchSinglePostByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
 		// Always make sure to update the entire body i.e the new body will be the new offer entirely (it replaces the old body, not updates it)
-		vendor.Put("/post/:id/offer", c.MakeOffer)
+		vendor.Put("/post/:id/offer/:rate", c.MakeOffer)
 		vendor.Delete("/post/:id/retract", c.RetractOffer)
 
 		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
