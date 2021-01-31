@@ -251,6 +251,9 @@ func UpdatePostStatus(postID, newStatus string) error {
 	updatePayload := types.M{
 		postStatusKey: newStatus,
 	}
+	if newStatus == types.ONGOING {
+		updatePayload[updatedKey] = time.Now().Unix()
+	}
 	return updateOne(postCollection, filter, updatePayload)
 }
 
@@ -471,11 +474,11 @@ func FetchPostRequirementsAndStatus(postID string) (string, *types.Inventory, er
 	return post.Status, &post.Requirements, nil
 }
 
-// FetchPostAcceptedOffersAndStatus returns the accepted offers of a post as well as its status
-func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Offer, string, error) {
+// FetchPostAcceptedOffersAndStatusAndName returns the accepted offers of a post as well as its status and its name
+func FetchPostAcceptedOffersAndStatusAndName(postID string) (map[string]types.Offer, string, string, int64, error) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
 	defer cancel()
@@ -483,11 +486,11 @@ func FetchPostAcceptedOffersAndStatus(postID string) (map[string]types.Offer, st
 	post := &types.Post{}
 	err = postCollection.FindOne(ctx, types.M{
 		primaryKey: docID,
-	}, options.FindOne().SetProjection(types.M{postAcceptedOffersKey: 1, postStatusKey: 1})).Decode(post)
+	}, options.FindOne().SetProjection(types.M{postAcceptedOffersKey: 1, postStatusKey: 1, postNameKey: 1, updatedKey: 1})).Decode(post)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", 0, err
 	}
-	return post.AcceptedOffers, post.Status, nil
+	return post.AcceptedOffers, post.Status, post.Name, post.Updated, nil
 }
 
 // FetchPostAcceptedOffersAndName returns the accepted offers of a post as well as its name

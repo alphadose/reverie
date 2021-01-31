@@ -10,6 +10,7 @@ import (
 	validator "github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/reverie/models/mongo"
+	"github.com/reverie/sendgrid"
 	"github.com/reverie/types"
 	"github.com/reverie/utils"
 )
@@ -184,7 +185,23 @@ func updatePostStatus(c *fiber.Ctx, status string) error {
 // No new offers can be made to this post
 // This marks the start of the job defined in the post
 func ActivatePost(c *fiber.Ctx) error {
-	return updatePostStatus(c, types.ONGOING)
+	postID := utils.ImmutableString(c.Params("id"))
+	if err := mongo.UpdatePostStatus(postID, types.ONGOING); err != nil {
+		return utils.ServerError("Post-Controller-9", err, c)
+	}
+
+	// Notify all vendors whose offers have been accepted
+	go mongo.BulkNotifyVendors(postID, types.ONGOING)
+
+	go func() {
+		if err := sendgrid.SendPostActivationEmail(postID); err != nil {
+			utils.LogError("Mailer-2", err)
+		}
+	}()
+
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
 }
 
 // DeactivatePost changes the post status from "ONGOING" to "OPEN"
@@ -202,7 +219,7 @@ func DeletePost(c *fiber.Ctx) error {
 // Denotes the end of a job request
 func MarkComplete(c *fiber.Ctx) error {
 	postID := c.Params("id")
-	acceptedOffers, status, err := mongo.FetchPostAcceptedOffersAndStatus(postID)
+	acceptedOffers, status, postName, lastUpdated, err := mongo.FetchPostAcceptedOffersAndStatusAndName(postID)
 	if err != nil {
 		return utils.ServerError("kekw", err, c)
 	}
@@ -214,6 +231,26 @@ func MarkComplete(c *fiber.Ctx) error {
 	if err := mongo.ReleaseVendorInventories(acceptedOffers); err != nil {
 		return utils.ServerError("kekw", err, c)
 	}
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction, c)
+	}
+
+	// Amount calculation
+	amount := 0.0
+	for _, offer := range acceptedOffers {
+		amount += offer.Rate // Amount per day
+	}
+	amount = (float64(time.Now().Unix()-lastUpdated) / (24 * 3600)) * amount // for total duration
+
+	amount = amount * 1.05 // 5% charge for our services
+
+	go func() {
+		if err := sendgrid.SendPostCompletionEmail(claims.GetEmail(), claims.GetName(), postName, amount); err != nil {
+			utils.LogError("Mailer-1", err)
+		}
+	}()
+
 	return updatePostStatus(c, types.COMPLETED)
 }
 
@@ -424,7 +461,7 @@ func RejectAcceptedOffer(c *fiber.Ctx) error {
 	postID := utils.ImmutableString(c.Params("id"))
 	offerKey := c.Params("key")
 
-	acceptedOffers, status, err := mongo.FetchPostAcceptedOffersAndStatus(postID)
+	acceptedOffers, status, _, _, err := mongo.FetchPostAcceptedOffersAndStatusAndName(postID)
 	if err != nil {
 		return utils.ServerError("kekw", err, c)
 	}

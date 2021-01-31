@@ -35,7 +35,9 @@ func setupAdmin() {
 		OfficeAddress: "Rourkela",
 		Verified:      true,
 		Inventory: &types.Inventory{
-			Truck: 10,
+			Truck:      100,
+			Crane:      100,
+			BoomLifter: 100,
 		},
 	}
 	filter := types.M{userEmailKey: adminInfo.Email}
