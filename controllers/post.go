@@ -193,8 +193,43 @@ func ActivatePost(c *fiber.Ctx) error {
 	// Notify all vendors whose offers have been accepted
 	go mongo.BulkNotifyVendors(postID, types.ONGOING)
 
+	claims := utils.ExtractClaims(c)
+	if claims == nil {
+		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction, c)
+	}
+	clientEmail := claims.GetEmail()
+
 	go func() {
-		if err := sendgrid.SendPostActivationEmail(postID); err != nil {
+		post, err := mongo.FetchSinglePostByClient(postID)
+		if err != nil {
+			utils.LogError("Mailer-2", err)
+			return
+		}
+		emailList := []string{clientEmail}
+		emailToOffer := types.M{
+			clientEmail: types.Inventory{},
+		}
+		for encryptedEmail, offer := range post.AcceptedOffers {
+			vendorEmail, err := utils.Decrypt(encryptedEmail)
+			if err != nil {
+				utils.LogError("Mailer-2", err)
+				continue
+			}
+			emailList = append(emailList, vendorEmail)
+			emailToOffer[vendorEmail] = offer.Content
+		}
+		users, err := mongo.FetchUsers(emailList)
+		if err != nil {
+			utils.LogError("Mailer-2", err)
+			return
+		}
+		for idx, user := range users {
+			if email, ok := user["email"].(string); ok {
+				// For sendgrid template rendering
+				users[idx]["content"] = emailToOffer[email]
+			}
+		}
+		if err := sendgrid.SendPostActivationEmail(post, users); err != nil {
 			utils.LogError("Mailer-2", err)
 		}
 	}()

@@ -4,27 +4,46 @@ import (
 	"fmt"
 
 	"github.com/reverie/configs"
+	"github.com/reverie/types"
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
+// successful response status code for sendgrid
+const statusOk = 202
+
+var client = sendgrid.NewSendClient(configs.Project.SendGrid.Key)
+
+// sender identities
 var (
-	sender = mail.NewEmail("Anish Mukherjee", "anish.mukherjee1996@gmail.com")
-	client = sendgrid.NewSendClient(configs.Project.SendGrid.Key)
+	anish = mail.NewEmail("Anish Mukherjee", "anish.mukherjee@ezflo.in")
+	goro  = mail.NewEmail("Gaurav Singhal", "gaurav.singhal@ezflo.in")
 )
 
 // List of template IDs
-var (
+const (
 	emailConfirmation = "d-05e19211d4524eefaad00e51e90a98e8"
 	postActivation    = "d-9243e54d3a094c849a73b93d8ff41e67"
 	postCompletion    = "d-796afee6aa124c709a6095c62e13c463"
 )
 
+// send message with error handling
+func send(message *mail.SGMailV3) error {
+	resp, err := client.Send(message)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != statusOk {
+		return fmt.Errorf("Error encountered while sending email :- %v", resp)
+	}
+	return nil
+}
+
 // SendConfirmationEmail sends a email confirmation message to the user's email address upon successful registration
 func SendConfirmationEmail(username, email, token string) error {
 	message := mail.NewV3Mail()
 
-	message.SetFrom(sender)
+	message.SetFrom(anish)
 	message.SetTemplateID(emailConfirmation)
 
 	personalization := mail.NewPersonalization()
@@ -35,29 +54,28 @@ func SendConfirmationEmail(username, email, token string) error {
 	personalization.SetDynamicTemplateData("link", fmt.Sprintf("%s/auth/confirm-email?token=%s", configs.Project.SendGrid.BackendEndpoint, token))
 
 	message.AddPersonalizations(personalization)
-	_, err := client.Send(message)
-	return err
+	return send(message)
 }
 
 // SendPostActivationEmail sends a email notification to us denoting the start of a post
 // After this we need to co-ordinate the delivery of equipment in an end-to-end fashion
-func SendPostActivationEmail(postID string) error {
+func SendPostActivationEmail(post *types.Post, users []types.M) error {
 	message := mail.NewV3Mail()
 
-	message.SetFrom(sender)
+	message.SetFrom(anish)
 	message.SetTemplateID(postActivation)
 
 	personalization := mail.NewPersonalization()
 	tos := []*mail.Email{
-		sender,
-		mail.NewEmail("Gaurav Singhal", "gauravsinghal5998@gmail.com"),
+		anish,
+		goro,
 	}
 	personalization.AddTos(tos...)
-	personalization.SetDynamicTemplateData("id", postID)
+	personalization.SetDynamicTemplateData("post", post)
+	personalization.SetDynamicTemplateData("users", users)
 
 	message.AddPersonalizations(personalization)
-	_, err := client.Send(message)
-	return err
+	return send(message)
 }
 
 // SendPostCompletionEmail sends an email notification denoting the end of a post
@@ -65,7 +83,7 @@ func SendPostActivationEmail(postID string) error {
 func SendPostCompletionEmail(recipentEmail, recipentName, postName string, amount float64) error {
 	message := mail.NewV3Mail()
 
-	message.SetFrom(sender)
+	message.SetFrom(anish)
 	message.SetTemplateID(postCompletion)
 
 	personalization := mail.NewPersonalization()
@@ -73,15 +91,14 @@ func SendPostCompletionEmail(recipentEmail, recipentName, postName string, amoun
 		mail.NewEmail(recipentName, recipentEmail),
 	}
 	ccs := []*mail.Email{
-		sender,
-		mail.NewEmail("Gaurav Singhal", "gauravsinghal5998@gmail.com"),
+		anish,
+		goro,
 	}
 	personalization.AddTos(tos...)
 	personalization.AddCCs(ccs...)
 	personalization.SetDynamicTemplateData("name", postName)
-	personalization.SetDynamicTemplateData("amount", amount)
+	personalization.SetDynamicTemplateData("amount", fmt.Sprintf("%.2f", amount))
 
 	message.AddPersonalizations(personalization)
-	_, err := client.Send(message)
-	return err
+	return send(message)
 }

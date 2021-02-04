@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"time"
 
 	validator "github.com/asaskevich/govalidator"
@@ -207,12 +206,12 @@ func VerifyUserEmail(c *fiber.Ctx) error {
 		return utils.ServerError("User-Controller-17", err, c)
 	}
 	c.Set("Content-Type", "text/html; charset=UTF-8")
-	return c.Send([]byte(fmt.Sprintf(`
+	return c.Send([]byte(`
 <html>
 <body>
 Email Verification Successful <br> <br>
 
-Click <a href="%s/auth/sign-in1">here</a> to login
+You can now login
 </body>
-</html>`, configs.Project.SendGrid.FrontendEndpoint)))
+</html>`))
 }

@@ -138,6 +138,15 @@ func ReleaseSingleVendorInventory(vendorEmail string, offer types.Inventory) err
 	}).Err()
 }
 
+// FetchUsers returns all users given their email ids
+func FetchUsers(emailList []string) ([]types.M, error) {
+	return fetchDocs(userCollection, types.M{
+		userEmailKey: types.M{
+			"$in": emailList,
+		},
+	}, options.Find())
+}
+
 // ReleaseVendorInventories releases inventories of all vendors bound to a job after it is marked as COMPLETED by the client
 // This set of inventory is then added back to their respective vendor's inventory pool
 func ReleaseVendorInventories(acceptedOffers map[string]types.Offer) error {
