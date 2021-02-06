@@ -209,6 +209,9 @@ func ActivatePost(c *fiber.Ctx) error {
 		emailToOffer := types.M{
 			clientEmail: types.Inventory{},
 		}
+		emailToRate := map[string]float64{
+			clientEmail: 0,
+		}
 		for encryptedEmail, offer := range post.AcceptedOffers {
 			vendorEmail, err := utils.Decrypt(encryptedEmail)
 			if err != nil {
@@ -217,6 +220,7 @@ func ActivatePost(c *fiber.Ctx) error {
 			}
 			emailList = append(emailList, vendorEmail)
 			emailToOffer[vendorEmail] = offer.Content
+			emailToRate[vendorEmail] = offer.Rate
 		}
 		users, err := mongo.FetchUsers(emailList)
 		if err != nil {
@@ -227,6 +231,7 @@ func ActivatePost(c *fiber.Ctx) error {
 			if email, ok := user["email"].(string); ok {
 				// For sendgrid template rendering
 				users[idx]["content"] = emailToOffer[email]
+				users[idx]["rate"] = emailToRate[email]
 			}
 		}
 		if err := sendgrid.SendPostActivationEmail(post, users); err != nil {
@@ -278,7 +283,8 @@ func MarkComplete(c *fiber.Ctx) error {
 	}
 	amount = (float64(time.Now().Unix()-lastUpdated) / (24 * 3600)) * amount // for total duration
 
-	amount = amount * 1.05 // 5% charge for our services
+	// TODO: Uncomment
+	// amount = amount * 1.05 // 5% charge for our services
 
 	go func() {
 		if err := sendgrid.SendPostCompletionEmail(claims.GetEmail(), claims.GetName(), postName, amount); err != nil {

@@ -215,3 +215,22 @@ You can now login
 </body>
 </html>`))
 }
+
+// ResetPassword resets a user's password
+func ResetPassword(c *fiber.Ctx) error {
+	email := c.Params("email")
+	password := utils.GenerateRandomString(7)
+	hashedPass, err := utils.HashPassword(password)
+	if err != nil {
+		return utils.ServerError("User-Controller-18", err, c)
+	}
+	if err := mongo.UpdatePassword(email, hashedPass); err != nil {
+		return utils.ServerError("User-Controller-19", err, c)
+	}
+	if err := sendgrid.SendPasswordResetEmail(email, password); err != nil {
+		return utils.ServerError("User-Controller-20", err, c)
+	}
+	return c.Status(fiber.StatusOK).JSON(types.M{
+		types.Success: true,
+	})
+}

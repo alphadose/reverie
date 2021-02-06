@@ -25,6 +25,7 @@ const (
 	emailConfirmation = "d-05e19211d4524eefaad00e51e90a98e8"
 	postActivation    = "d-9243e54d3a094c849a73b93d8ff41e67"
 	postCompletion    = "d-796afee6aa124c709a6095c62e13c463"
+	passwordReset     = "d-1227bf471f6745659774a50a93296c8b"
 )
 
 // send message with error handling
@@ -52,6 +53,25 @@ func SendConfirmationEmail(username, email, token string) error {
 	}
 	personalization.AddTos(tos...)
 	personalization.SetDynamicTemplateData("link", fmt.Sprintf("%s/auth/confirm-email?token=%s", configs.Project.SendGrid.BackendEndpoint, token))
+
+	message.AddPersonalizations(personalization)
+	return send(message)
+}
+
+// SendPasswordResetEmail sends a email containing the new login credentials
+func SendPasswordResetEmail(email, password string) error {
+	message := mail.NewV3Mail()
+
+	message.SetFrom(anish)
+	message.SetTemplateID(passwordReset)
+
+	personalization := mail.NewPersonalization()
+	tos := []*mail.Email{
+		mail.NewEmail("Me", email),
+	}
+	personalization.AddTos(tos...)
+	personalization.SetDynamicTemplateData("email", email)
+	personalization.SetDynamicTemplateData("password", password)
 
 	message.AddPersonalizations(personalization)
 	return send(message)

@@ -15,7 +15,7 @@ import (
 // timeline is important http://localhost:8080/extra-pages/timeline
 // PART LEFT: Payment, Emails, Order Shipment Tracking
 // TODO : No need to fetch all accepted offers, just the key (map reduce)
-// Password reset
+// Password reset (proper)
 
 // Need to make a rulebook for the support team
 // Contents :-
@@ -26,7 +26,6 @@ import (
 // TODO : refactor mongo code
 // TODO : fix context messages and return error messages
 // TODO : add suggestion to client in frontend for activating post when all criteria has been satisfied
-// update post timestamp
 // Add endpoint for fetching completed jobs for both client and vendor
 
 func newRouter() *fiber.App {
@@ -49,6 +48,7 @@ func newRouter() *fiber.App {
 		auth.Post("/register/client", c.RegisterClient)
 		auth.Post("/register/vendor", c.RegisterVendor)
 		auth.Get("/confirm-email", c.VerifyUserEmail)
+		auth.Get("/reset-password/:email", c.ResetPassword)
 	}
 
 	client := router.Group("/client", m.JWT, m.IsClient)
