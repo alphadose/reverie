@@ -54,12 +54,12 @@ func FetchNotifications(email string, pageNumber int64) ([]types.M, error) {
 func notifyVendor(postID, vendorEmail, messageTemplate string) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-1", err)
 		return
 	}
 	postName, err := FetchPostName(postID)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-2", err)
 		return
 	}
 	message := fmt.Sprintf(messageTemplate, postName)
@@ -72,7 +72,7 @@ func notifyVendor(postID, vendorEmail, messageTemplate string) {
 		Created:  time.Now().Unix(),
 	})
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-3", err)
 	}
 }
 
@@ -103,13 +103,13 @@ func BulkNotifyVendors(postID, status string) {
 
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-4", err)
 		return
 	}
 	// TODO: need only keys from accepted offers, not the entire collection
 	acceptedOffers, postName, err := FetchPostAcceptedOffersAndName(postID)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-5", err)
 		return
 	}
 	message := fmt.Sprintf(messageTemplate, postName)
@@ -124,7 +124,7 @@ func BulkNotifyVendors(postID, status string) {
 	for _, offerKey := range offerKeys {
 		vendorEmail, err := utils.Decrypt(offerKey)
 		if err != nil {
-			utils.LogError("kekw", err)
+			utils.LogError("Notification-Controller-6", err)
 			continue
 		}
 		payload = append(payload, types.Notification{
@@ -139,7 +139,7 @@ func BulkNotifyVendors(postID, status string) {
 
 	_, err = insertMany(notificationCollection, payload)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-7", err)
 	}
 }
 
@@ -147,12 +147,12 @@ func BulkNotifyVendors(postID, status string) {
 func NotifyClient(postID, messageTemplate string) {
 	docID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-8", err)
 		return
 	}
 	postName, owner, err := FetchPostNameAndOwner(postID)
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-9", err)
 		return
 	}
 	message := fmt.Sprintf(messageTemplate, postName)
@@ -165,7 +165,7 @@ func NotifyClient(postID, messageTemplate string) {
 		Created:  time.Now().Unix(),
 	})
 	if err != nil {
-		utils.LogError("", err)
+		utils.LogError("Notification-Controller-10", err)
 	}
 }
 
