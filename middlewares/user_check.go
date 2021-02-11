@@ -9,7 +9,7 @@ import (
 func IsClient(c *fiber.Ctx) error {
 	user := utils.ExtractClaims(c)
 	if user == nil {
-		return utils.ServerError("Middleware-Validator-1", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Middleware-Validator-3", utils.ErrFailedExtraction, c)
 	}
 	if user.IsClient() || user.IsAdmin() {
 		return c.Next()
@@ -21,7 +21,7 @@ func IsClient(c *fiber.Ctx) error {
 func IsVendor(c *fiber.Ctx) error {
 	user := utils.ExtractClaims(c)
 	if user == nil {
-		return utils.ServerError("Middleware-Validator-2", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Middleware-Validator-4", utils.ErrFailedExtraction, c)
 	}
 	if user.IsVendor() || user.IsAdmin() {
 		return c.Next()

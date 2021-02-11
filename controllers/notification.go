@@ -13,7 +13,7 @@ import (
 func FetchNotifications(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Notification-Controller-1", utils.ErrFailedExtraction, c)
 	}
 	// Extract page number for pagination and validate
 	page := c.Query("page", "0")
@@ -23,7 +23,7 @@ func FetchNotifications(c *fiber.Ctx) error {
 	}
 	notifications, err := mongo.FetchNotifications(claims.GetEmail(), pageNumber)
 	if err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Notification-Controller-2", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(types.M{
@@ -37,12 +37,12 @@ func FetchNotifications(c *fiber.Ctx) error {
 func ReadNotification(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Notification-Controller-3", utils.ErrFailedExtraction, c)
 	}
 
 	notificationID := c.Params("id")
 	if err := mongo.MarkRead(notificationID, claims.GetEmail()); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Notification-Controller-4", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(types.M{

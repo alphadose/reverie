@@ -88,14 +88,13 @@ func newRouter() *fiber.App {
 		vendor.Put("/inventory", c.InitializeInventory) // Restrict this, should only happen on our authorization
 		vendor.Put("/password", c.UpdatePassword)
 		vendor.Get("/post", c.FetchPostsByVendor)
+		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
+		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)
 		vendor.Get("/post/:id", c.FetchSinglePostByVendor)
 		// TODO: notify us so that we can contact the client directly in case he doesnt use the app
 		// Always make sure to update the entire body i.e the new body will be the new offer entirely (it replaces the old body, not updates it)
 		vendor.Put("/post/:id/offer/:rate", c.MakeOffer)
 		vendor.Delete("/post/:id/retract", c.RetractOffer)
-
-		vendor.Get("/post/offered", c.FetchOfferedPostsByVendor)
-		vendor.Get("/post/contracted", c.FetchContractedPostsByVendor)
 	}
 
 	notification := router.Group("/notification", m.JWT)

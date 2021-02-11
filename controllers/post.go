@@ -67,7 +67,7 @@ func FetchSinglePostByClient(c *fiber.Ctx) error {
 
 	post, err := mongo.FetchSinglePostByClient(postID)
 	if err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-6", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(post)
@@ -77,7 +77,7 @@ func FetchSinglePostByClient(c *fiber.Ctx) error {
 func MakeOffer(c *fiber.Ctx) error {
 	rate, err := strconv.ParseFloat(c.Params("rate"), 64)
 	if err != nil {
-		return utils.ServerError("Post-Controller-6", err, c)
+		return utils.ServerError("Post-Controller-7", err, c)
 	}
 
 	offer := &types.Inventory{}
@@ -87,7 +87,7 @@ func MakeOffer(c *fiber.Ctx) error {
 
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-8", utils.ErrFailedExtraction, c)
 	}
 
 	postID := utils.ImmutableString(c.Params("id"))
@@ -98,12 +98,12 @@ func MakeOffer(c *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		return utils.ServerError("Post-Controller", err, c)
+		return utils.ServerError("Post-Controller-9", err, c)
 	}
 
 	vendorInventory, err := mongo.FetchVendorInventory(claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("Post-Controller", err, c)
+		return utils.ServerError("Post-Controller-10", err, c)
 	}
 
 	// Validate the offer made by the vendor
@@ -136,7 +136,7 @@ func MakeOffer(c *fiber.Ctx) error {
 		Content: *offer,
 		Rate:    rate,
 	}); err != nil {
-		return utils.ServerError("Post-Controller-7", err, c)
+		return utils.ServerError("Post-Controller-11", err, c)
 	}
 
 	go mongo.NotifyClient(postID, claims.GetName()+" made an offer to your post %s")
@@ -150,13 +150,13 @@ func MakeOffer(c *fiber.Ctx) error {
 func RetractOffer(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-6", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-12", utils.ErrFailedExtraction, c)
 	}
 
 	postID := utils.ImmutableString(c.Params("id"))
 
 	if err := mongo.RetractPostOffer(postID, claims.GetEmail()); err != nil {
-		return utils.ServerError("Post-Controller-7", err, c)
+		return utils.ServerError("Post-Controller-13", err, c)
 	}
 
 	go mongo.NotifyClient(postID, claims.GetName()+" retracted his offer from your post %s")
@@ -170,7 +170,7 @@ func RetractOffer(c *fiber.Ctx) error {
 func updatePostStatus(c *fiber.Ctx, status string) error {
 	postID := utils.ImmutableString(c.Params("id"))
 	if err := mongo.UpdatePostStatus(postID, status); err != nil {
-		return utils.ServerError("Post-Controller-9", err, c)
+		return utils.ServerError("Post-Controller-14", err, c)
 	}
 
 	// Notify all vendors whose offers have been accepted
@@ -187,7 +187,7 @@ func updatePostStatus(c *fiber.Ctx, status string) error {
 func ActivatePost(c *fiber.Ctx) error {
 	postID := utils.ImmutableString(c.Params("id"))
 	if err := mongo.UpdatePostStatus(postID, types.ONGOING); err != nil {
-		return utils.ServerError("Post-Controller-9", err, c)
+		return utils.ServerError("Post-Controller-15", err, c)
 	}
 
 	// Notify all vendors whose offers have been accepted
@@ -195,14 +195,14 @@ func ActivatePost(c *fiber.Ctx) error {
 
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction, c)
 	}
 	clientEmail := claims.GetEmail()
 
 	go func() {
 		post, err := mongo.FetchSinglePostByClient(postID)
 		if err != nil {
-			utils.LogError("Mailer-2", err)
+			utils.LogError("Mailer-1", err)
 			return
 		}
 		emailList := []string{clientEmail}
@@ -224,7 +224,7 @@ func ActivatePost(c *fiber.Ctx) error {
 		}
 		users, err := mongo.FetchUsers(emailList)
 		if err != nil {
-			utils.LogError("Mailer-2", err)
+			utils.LogError("Mailer-3", err)
 			return
 		}
 		for idx, user := range users {
@@ -235,7 +235,7 @@ func ActivatePost(c *fiber.Ctx) error {
 			}
 		}
 		if err := sendgrid.SendPostActivationEmail(post, users); err != nil {
-			utils.LogError("Mailer-2", err)
+			utils.LogError("Mailer-4", err)
 		}
 	}()
 
@@ -261,7 +261,7 @@ func MarkComplete(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	acceptedOffers, status, postName, lastUpdated, err := mongo.FetchPostAcceptedOffersAndStatusAndName(postID)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-100", err, c)
 	}
 
 	if status != types.ONGOING {
@@ -269,11 +269,11 @@ func MarkComplete(c *fiber.Ctx) error {
 	}
 
 	if err := mongo.ReleaseVendorInventories(acceptedOffers); err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-101", err, c)
 	}
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-17", utils.ErrFailedExtraction, c)
 	}
 
 	// Amount calculation
@@ -288,7 +288,7 @@ func MarkComplete(c *fiber.Ctx) error {
 
 	go func() {
 		if err := sendgrid.SendPostCompletionEmail(claims.GetEmail(), claims.GetName(), postName, amount); err != nil {
-			utils.LogError("Mailer-1", err)
+			utils.LogError("Mailer-0", err)
 		}
 	}()
 
@@ -301,7 +301,7 @@ func UpdatePost(c *fiber.Ctx) error {
 	postID := c.Params("id")
 	status, err := mongo.FetchPostStatus(postID)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-102", err, c)
 	}
 
 	if status != types.OPEN {
@@ -318,12 +318,12 @@ func UpdatePost(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusBadRequest, err.Error())
 		}
 		if err := postUpdate.InitializeLocation(); err != nil {
-			return utils.ServerError("Post-Controller-10", err, c)
+			return utils.ServerError("Post-Controller-18", err, c)
 		}
 	}
 
 	if err := mongo.UpdatePost(postID, postUpdate); err != nil {
-		return utils.ServerError("Post-Controller-12", err, c)
+		return utils.ServerError("Post-Controller-19", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(types.M{
@@ -335,11 +335,11 @@ func UpdatePost(c *fiber.Ctx) error {
 func FetchOfferedPostsByVendor(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-20", utils.ErrFailedExtraction, c)
 	}
 	offeredPosts, err := mongo.FetchOfferedPostsByVendor(claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("Post-Controller-14", err, c)
+		return utils.ServerError("Post-Controller-21", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -383,11 +383,11 @@ func FetchPostsByVendor(c *fiber.Ctx) error {
 
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-13", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-22", utils.ErrFailedExtraction, c)
 	}
 	openPosts, err := mongo.FetchPostsByVendor(claims.GetEmail(), pageNumber, lookupItems)
 	if err != nil {
-		return utils.ServerError("Post-Controller-15", err, c)
+		return utils.ServerError("Post-Controller-23", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -400,11 +400,11 @@ func FetchPostsByVendor(c *fiber.Ctx) error {
 func FetchContractedPostsByVendor(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-24", utils.ErrFailedExtraction, c)
 	}
 	contractedPosts, err := mongo.FetchContractedPostsByVendor(claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("Post-Controller-17", err, c)
+		return utils.ServerError("Post-Controller-25", err, c)
 	}
 	return c.Status(fiber.StatusOK).JSON(types.M{
 		types.Success: true,
@@ -416,13 +416,13 @@ func FetchContractedPostsByVendor(c *fiber.Ctx) error {
 func FetchSinglePostByVendor(c *fiber.Ctx) error {
 	claims := utils.ExtractClaims(c)
 	if claims == nil {
-		return utils.ServerError("Post-Controller-16", utils.ErrFailedExtraction, c)
+		return utils.ServerError("Post-Controller-26", utils.ErrFailedExtraction, c)
 	}
 	postID := c.Params("id")
 
 	post, err := mongo.FetchSinglePostByVendor(postID, claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-27", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(post)
@@ -438,7 +438,7 @@ func AcceptOffer(c *fiber.Ctx) error {
 
 	status, offers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
 	if err != nil {
-		return utils.ServerError("Post-Controller-18", err, c)
+		return utils.ServerError("Post-Controller-28", err, c)
 	}
 
 	if status != types.OPEN {
@@ -453,12 +453,12 @@ func AcceptOffer(c *fiber.Ctx) error {
 
 	vendorEmail, err := utils.Decrypt(offerKey)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-29", err, c)
 	}
 
 	vendorInventory, err := mongo.FetchVendorInventory(vendorEmail)
 	if err != nil {
-		return utils.ServerError("Post-Controller-18", err, c)
+		return utils.ServerError("Post-Controller-30", err, c)
 	}
 
 	// Check if offer exceeds post requirements or vendor's current inventory
@@ -482,11 +482,11 @@ func AcceptOffer(c *fiber.Ctx) error {
 	}
 
 	if err := mongo.AcceptOffer(postID, offerKey, offer); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-31", err, c)
 	}
 
 	if err := mongo.UpdateVendorInventoryOnAcceptance(vendorEmail, offer.Content); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-32", err, c)
 	}
 
 	// Notify vendor
@@ -504,7 +504,7 @@ func RejectAcceptedOffer(c *fiber.Ctx) error {
 
 	acceptedOffers, status, _, _, err := mongo.FetchPostAcceptedOffersAndStatusAndName(postID)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-33", err, c)
 	}
 
 	if status != types.OPEN {
@@ -519,15 +519,15 @@ func RejectAcceptedOffer(c *fiber.Ctx) error {
 
 	vendorEmail, err := utils.Decrypt(offerKey)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-34", err, c)
 	}
 
 	if err := mongo.RejectAcceptedOffer(postID, offerKey, offer.Content); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-35", err, c)
 	}
 
 	if err := mongo.ReleaseSingleVendorInventory(vendorEmail, offer.Content); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-36", err, c)
 	}
 
 	// Notify vendor
@@ -545,11 +545,11 @@ func RejectPendingOffer(c *fiber.Ctx) error {
 
 	vendorEmail, err := utils.Decrypt(offerKey)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-37", err, c)
 	}
 
 	if err := mongo.RejectPendingOffer(postID, offerKey); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-38", err, c)
 	}
 
 	// Notify vendor
@@ -578,7 +578,7 @@ func RequestOfferChange(c *fiber.Ctx) error {
 
 	status, offers, requirements, err := mongo.FetchPostOffersAndRequirementsAndStatus(postID)
 	if err != nil {
-		return utils.ServerError("Post-Controller-18", err, c)
+		return utils.ServerError("Post-Controller-39", err, c)
 	}
 
 	if status != types.OPEN {
@@ -593,12 +593,12 @@ func RequestOfferChange(c *fiber.Ctx) error {
 
 	vendorEmail, err := utils.Decrypt(offerKey)
 	if err != nil {
-		return utils.ServerError("kekw", err, c)
+		return utils.ServerError("Post-Controller-40", err, c)
 	}
 
 	vendorInventory, err := mongo.FetchVendorInventory(vendorEmail)
 	if err != nil {
-		return utils.ServerError("Post-Controller-18", err, c)
+		return utils.ServerError("Post-Controller-41", err, c)
 	}
 
 	// Check if offer exceeds post requirements or vendor's current inventory
@@ -622,7 +622,7 @@ func RequestOfferChange(c *fiber.Ctx) error {
 	}
 
 	if err := mongo.NotifyOfferChangeToVendor(postID, vendorEmail, offerChange); err != nil {
-		return utils.ServerError("Post-Controller-19", err, c)
+		return utils.ServerError("Post-Controller-42", err, c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(types.M{

@@ -16,7 +16,7 @@ func IsPostOwner(c *fiber.Ctx) error {
 
 	owner, err := mongo.IsPostOwner(postID, claims.GetEmail())
 	if err != nil {
-		return utils.ServerError("Middleware-Validator-1", err, c)
+		return utils.ServerError("Middleware-Validator-2", err, c)
 	}
 
 	if !owner {
