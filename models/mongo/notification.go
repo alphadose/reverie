@@ -21,7 +21,7 @@ const (
 	notificationReadKey = "read"
 
 	// notificationPageSize is the maximum number of notifications per batch
-	notificationPageSize = 20
+	notificationPageSize = 30
 )
 
 var notificationCollection = db.Collection(notificationCollectionKey)
