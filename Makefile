@@ -29,12 +29,12 @@ build:
 
 ## tools: Install development tools
 tools:
-	@$(BUILDIR)/install_fresh.sh
+	@$(BUILDIR)/install_air.sh
 	@$(BUILDIR)/install_golint.sh
 
 ## start: Start in development mode with hot-reload enabled
 start: tools
-	@$(PROJECTROOT)/bin/fresh
+	@$(PROJECTROOT)/bin/air -c .air.toml
 
 ## clean: Clean build files
 clean:
