@@ -1,6 +1,6 @@
 # Reverie
 
-> Backend of EzFlo
+> A generic order management system
 
 ## Development
 
